@@ -1,0 +1,134 @@
+{# How far the four surrounding safety collision walls sit from the bench
+   edges, in mm. One knob moves all four walls in/out together. #}
+{%- set wall_offset = 100 -%}
+core:
+  type: "core"
+  simulation: true
+  ip: ""
+  has_rail: true
+  rail_cfg:
+    type: "rail_hd_500mm"
+  has_tool_changer: true
+  has_motion_plan: true
+  has_camera: false
+  camera_cfg:
+    serial_number: ""
+  robot_attach:
+    rail_carriage_anchor: "hole_1"
+    robot_A0_anchor: "hole_0"
+    offset: [0, 0, 0, 0, 0, 0]
+  attach:
+    parent_name: "fixture_plate_2"
+    parent_solid: "body"
+    parent_anchor: "F13"
+    child_solid: "rail_base"
+    child_anchor: "hole_3"
+    offset: [0, 0, 0, 0, 0, 0]
+
+fixture_plate_2:
+  type: "fixture_plate"
+  offset: [0, 0, 0, 0, 0, 0]
+
+fixture_plate_1:
+  type: "fixture_plate"
+  attach:
+    parent_name: "fixture_plate_2"
+    parent_solid: "body"
+    parent_anchor: "right"
+    child_solid: "body"
+    child_anchor: "left"
+    offset: [0, 0, 0, 0, 0, 0]
+
+fixture_plate_3:
+  type: "fixture_plate"
+  attach:
+    parent_name: "fixture_plate_2"
+    parent_solid: "body"
+    parent_anchor: "left"
+    child_solid: "body"
+    child_anchor: "right"
+    offset: [0, 0, 0, 0, 0, 0]
+
+fixture_plate_4:
+  type: "fixture_plate"
+  attach:
+    parent_name: "fixture_plate_1"
+    parent_solid: "body"
+    parent_anchor: "front"
+    child_solid: "body"
+    child_anchor: "back"
+    offset: [0, 0, 0, 0, 0, 0]
+
+fixture_plate_5:
+  type: "fixture_plate"
+  attach:
+    parent_name: "fixture_plate_2"
+    parent_solid: "body"
+    parent_anchor: "front"
+    child_solid: "body"
+    child_anchor: "back"
+    offset: [0, 0, 0, 0, 0, 0]
+
+fixture_plate_6:
+  type: "fixture_plate"
+  attach:
+    parent_name: "fixture_plate_3"
+    parent_solid: "body"
+    parent_anchor: "front"
+    child_solid: "body"
+    child_anchor: "back"
+    offset: [0, 0, 0, 0, 0, 0]
+
+table:
+  type: "table_48x30"
+  attach:
+    parent_name: "fixture_plate_2"
+    parent_solid: "body"
+    parent_anchor: "front"
+    child_solid: "body"
+    child_anchor: "place"
+    offset: [0, 0, -7, 0, 0, 0]
+
+collision_box_back:
+  type: "collision_box"
+  size: [10, 750, 600]
+  attach:
+    parent_name: "fixture_plate_2"
+    parent_solid: "body"
+    parent_anchor: "back"
+    child_solid: "body"
+    child_anchor: "front"
+    offset: [-{{ wall_offset }}, 0, 0, 0, 0, 0]
+
+collision_box_front:
+  type: "collision_box"
+  size: [10, 750, 600]
+  attach:
+    parent_name: "fixture_plate_5"
+    parent_solid: "body"
+    parent_anchor: "front"
+    child_solid: "body"
+    child_anchor: "back"
+    offset: [{{ wall_offset }}, 0, 0, 0, 0, 0]
+
+collision_box_left:
+  type: "collision_box"
+  size: [1000, 10, 600]
+  attach:
+    parent_name: "fixture_plate_3"
+    parent_solid: "body"
+    parent_anchor: "corner_0"
+    child_solid: "body"
+    child_anchor: "corner_3"
+    offset: [0, {{ wall_offset }}, 0, 0, 0, 0]
+
+collision_box_right:
+  type: "collision_box"
+  size: [1000, 10, 600]
+  attach:
+    parent_name: "fixture_plate_1"
+    parent_solid: "body"
+    parent_anchor: "corner_3"
+    child_solid: "body"
+    child_anchor: "corner_0"
+    offset: [0, -{{ wall_offset }}, 0, 0, 0, 0]

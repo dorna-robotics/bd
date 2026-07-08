@@ -1,0 +1,24 @@
+# falcon — launch config.
+#
+# Per tube: pick → weigh on the scale → camera → barcode → decap (cap to
+# its index on the cap holder) → tube back → pipettor: fresh tip →
+# dispense → tip to waste. tube_count sets how many tubes to run.
+
+project_name: falcon
+port:         5010
+scene:        [scene/core_500.j2, scene/layout.j2]
+recipes:      recipes.j2
+actions:      actions.py
+checks:       checks.py
+
+plan_window:  4
+scheduler:    cpsat
+
+kwargs:
+  tube_count:
+    type: int
+    default: 1
+    label: Tubes to process
+    hint: How many tubes to run (pick → weigh → camera → barcode → decap → dispense).
+    min: 1
+    max: 20
