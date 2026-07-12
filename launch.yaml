@@ -1,10 +1,10 @@
-# falcon — launch config.
+# bd — launch config.
 #
 # Per tube: pick → weigh on the scale → camera → barcode → decap (cap to
 # its index on the cap holder) → tube back → pipettor: fresh tip →
 # dispense → tip to waste. tube_count sets how many tubes to run.
 
-project_name: falcon
+project_name: bd
 port:         5010
 scene:        [scene/core_500.j2, scene/layout.j2]
 recipes:      recipes.j2
