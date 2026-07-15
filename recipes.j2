@@ -58,20 +58,34 @@ scale:
   class: workspace.recipes.scale.Scale
   kwargs: {component: scale_spx222_1, base_distance: 50, rail_step: 25, rail_span: 20, speed_factor: {{ sf }}}
 
-# Falcon holder ON the scale — pick/place a tube onto its "place" anchor
-# (Scale recipe = base Recipe targeting "place"; same pattern apc used for
-# the anode).
+# Falcon holder ON the scale — pick/place a tube onto its "place" anchor.
+# Base Recipe, not Scale: the scaletop is a passive holder with no device
+# link, so it must not carry weight() — reading grams is the "scale"
+# handle's job above.
 scale_holder:
-  class: workspace.recipes.scale.Scale
-  kwargs: {component: scaletop_falcon_15ml_1, base_distance: 50, rail_step: 25, rail_span: 20, speed_factor: {{ sf }}}
+  class: workspace.recipes.recipe.Recipe
+  kwargs: {component: scaletop_falcon_15ml_1, target_anchor: place, base_distance: 50, rail_step: 25, rail_span: 20, speed_factor: {{ sf }}}
 
 # Camera — present the held tube to the vertical station + detect().
+# left_approach false: the station x (-164.7 in the rail frame) is past
+# the left end of the rail (rmin -159), so parking left of it is
+# impossible — with left_approach true the only rail candidates were
+# directly under the station (folded posture, big J1 swing) and any
+# base_distance > ~225 found no rail at all. 150/25x3 (not 200/25x10):
+# sim-swept jointly with barcode_reader over base_distance x rail_span —
+# the only region where boot IK AND the tube-in-gripper present() solve
+# for both stations with matching postures (j1/j2/j4 within ~1.5 deg).
+# Wider spans let the solver park under the station again; standoffs
+# >= ~200 fail present() once the tube TCP shortens the reach.
 inspector:
   class: workspace.recipes.inspector.FixedInspector
-  kwargs: {component: inspection_vertical_144mm_1, base_distance: 200, rail_step: 25, rail_span: 10, detection_preset: {}, speed_factor: {{ sf }}}
+  kwargs: {component: inspection_vertical_144mm_1, left_approach: false, base_distance: 150, rail_step: 25, rail_span: 3, detection_preset: {}, speed_factor: {{ sf }}}
 
 # Barcode reader — present() faces the held tube at the reader; detect()
 # reads sim-agnostically (canned in sim, real DS457 otherwise).
+# Same IK params as the inspector: both stations sit on plate 1 near the
+# left end of the rail, so the base must park to their right — see the
+# inspector note above.
 barcode_reader:
   class: workspace.recipes.barcode_reader.BarcodeReader
-  kwargs: {component: barcode_reader_1, base_distance: 200, rail_step: 25, rail_span: 10, speed_factor: {{ sf }}}
+  kwargs: {component: barcode_reader_1, left_approach: false, base_distance: 150, rail_step: 25, rail_span: 3, speed_factor: {{ sf }}}
