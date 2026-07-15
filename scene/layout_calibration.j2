@@ -1,0 +1,245 @@
+# falcon — CALIBRATION layout on the shared core_500 chassis.
+#
+# Identical to layout.j2 (same racks, adapters, decapper, scale, camera,
+# barcode) EXCEPT the two tool racks hold calibration probes instead of the
+# production tools:
+#   - tool rack 144 (plate 5/A17): probe_rod       -> SIMPLE-mode calibration
+#   - tool rack 192 (plate 5/H17): probe_vertical  -> PRECISE-mode calibration
+# Both probes carry a tool changer and park in their rack. In sim you swap
+# tools with rcp["tool_rack_144mm"].pick()/place() (the calibration
+# notebook's tool-change cell) or by attaching the tool by hand in the
+# viewer. All devices run in sim (no ip/port). For real hardware add
+# ip/port + simulation: false.
+
+# ── Tooling: calibration probes in the tool racks ───────────────────
+tool_rack_144mm_1:
+  type: "tool_rack_144mm"
+  attach:
+    parent_name: "fixture_plate_5"
+    parent_solid: "body"
+    parent_anchor: "A17"
+    child_solid: "body"
+    child_anchor: "hole_0"
+    offset: [0, 0, 0, 0, 0, 90]
+
+# probe_rod — flat-tipped rod for SIMPLE-mode calibration (adapter_sbs_*).
+probe_rod_1:
+  type: "probe_rod"
+  has_tool_changer: true
+  simulation: true
+  attach:
+    parent_name: "tool_rack_144mm_1"
+    parent_solid: "body"
+    parent_anchor: "place"
+    child_solid: "tool_changer_tool_side"
+    child_anchor: "tool_rack_connection"
+    offset: [0, 0, 0, 0, 0, 0]
+
+tool_rack_192mm_1:
+  type: "tool_rack_192mm"
+  attach:
+    parent_name: "fixture_plate_5"
+    parent_solid: "body"
+    parent_anchor: "H17"
+    child_solid: "body"
+    child_anchor: "hole_0"
+    offset: [0, 0, 0, 0, 0, 90]
+
+# probe_vertical — three-pocket probe for PRECISE-mode calibration
+# (tool-changer / tool-rack clb_0 anchors).
+probe_vertical_1:
+  type: "probe_vertical"
+  has_tool_changer: true
+  simulation: true
+  attach:
+    parent_name: "tool_rack_192mm_1"
+    parent_solid: "body"
+    parent_anchor: "place"
+    child_solid: "tool_changer_tool_side"
+    child_anchor: "tool_rack_connection"
+    offset: [0, 0, 0, 0, 0, 0]
+
+# ── Falcon rack on plate 4/D9 — FULL: 20 capped tubes ───────────────
+adapter_plate_falcon_15ml_1:
+  type: "adapter_plate_falcon_15ml"
+  attach:
+    parent_name: "fixture_plate_4"
+    parent_solid: "body"
+    parent_anchor: "D9"
+    child_solid: "body"
+    child_anchor: "hole_0"
+    offset: [0, 0, 0, 0, 0, 90]
+
+rack_falcon_15ml_1:
+  type: "rack_falcon_15ml"
+  rvec_safe: [0, 0, 135]
+  attach:
+    parent_name: "adapter_plate_falcon_15ml_1"
+    parent_solid: "body"
+    parent_anchor: "place"
+    child_solid: "body"
+    child_anchor: "center"
+    offset: [0, 0, 0, 0, 0, 0]
+
+{% for r in "ABCD" %}
+{% for c in range(1, 5+1) %}
+tube_falcon_{{ r }}{{ c }}:
+  type: "tube_falcon_15ml"
+  attach:
+    parent_name: "rack_falcon_15ml_1"
+    parent_solid: "body"
+    parent_anchor: "{{ r }}{{ c }}"
+    child_solid: "body"
+    child_anchor: "center"
+    offset: [0, 0, 0, 0, 0, 0]
+
+cap_falcon_{{ r }}{{ c }}:
+  type: "cap_falcon_15ml"
+  attach:
+    parent_name: "tube_falcon_{{ r }}{{ c }}"
+    parent_solid: "body"
+    parent_anchor: "place"
+    child_solid: "body"
+    child_anchor: "center"
+    offset: [0, 0, 0, 0, 0, 0]
+{% endfor %}
+{% endfor %}
+
+# ── Tip rack on plate 4/C19 — 96 axygen 180 µL tips ─────────────────
+adapter_sbs_0:
+  type: "adapter_plate_sbs"
+  attach:
+    parent_name: "fixture_plate_4"
+    parent_solid: "body"
+    parent_anchor: "C19"
+    child_solid: "body"
+    child_anchor: "hole_0"
+    offset: [0, 0, 0, 0, 0, 0]
+
+rack_tip:
+  type: "rack_axygen_180ul"
+  rvec_safe: [0, 0, 180]
+  attach:
+    parent_name: "adapter_sbs_0"
+    parent_solid: "body"
+    parent_anchor: "place"
+    child_solid: "body"
+    child_anchor: "center"
+    offset: [0, 0, 0, 0, 0, 0]
+
+{% for r in "ABCDEFGH" %}
+{% for c in range(1, 12+1) %}
+tip_{{ r }}{{ c }}:
+  type: "tip_axygen_180ul"
+  attach:
+    parent_name: "rack_tip"
+    parent_solid: "body"
+    parent_anchor: "{{ r }}{{ c }}"
+    child_solid: "body"
+    child_anchor: "center"
+    offset: [0, 0, 0, 0, 0, 0]
+{% endfor %}
+{% endfor %}
+
+# ── Tip waste bin on plate 4/G19 (empty) ────────────────────────────
+adapter_sbs_1:
+  type: "adapter_plate_sbs"
+  attach:
+    parent_name: "fixture_plate_4"
+    parent_solid: "body"
+    parent_anchor: "G19"
+    child_solid: "body"
+    child_anchor: "hole_0"
+    offset: [0, 0, 0, 0, 0, 0]
+
+tip_waste_bin:
+  type: "rack_tip_waste_bin"
+  rvec_safe: [0, 0, 180]
+  attach:
+    parent_name: "adapter_sbs_1"
+    parent_solid: "body"
+    parent_anchor: "place"
+    child_solid: "body"
+    child_anchor: "center"
+    offset: [0, 0, 0, 0, 0, 0]
+
+# ── Decapper on plate 4/G5 ──────────────────────────────────────────
+decapper_1:
+  type: "decapper"
+  output_enable: [[2, 1, 0.1]]
+  output_disable: [[2, 0, 0.1]]
+  attach:
+    parent_name: "fixture_plate_4"
+    parent_solid: "body"
+    parent_anchor: "A10"
+    child_solid: "body"
+    child_anchor: "hole_1"
+    offset: [0, 0, 0, 0, 0, 0]
+
+# ── Falcon 15 cap holder on plate 4/E1 (empty) ──────────────────────
+adapter_capholder_falcon_15ml_1:
+  type: "adapter_capholder_falcon_15ml"
+  attach:
+    parent_name: "fixture_plate_4"
+    parent_solid: "body"
+    parent_anchor: "J5"
+    child_solid: "body"
+    child_anchor: "hole_0"
+    offset: [0, 0, 0, 0, 0, 270]
+
+capholder_falcon_15ml_1:
+  type: "capholder_falcon_15ml"
+  attach:
+    parent_name: "adapter_capholder_falcon_15ml_1"
+    parent_solid: "body"
+    parent_anchor: "place"
+    child_solid: "body"
+    child_anchor: "center"
+    offset: [0, 0, 0, 0, 0, 180]
+
+# ── Scale (OHAUS SPX222) on plate 1/D12, falcon holder on top ───────
+scale_spx222_1:
+  type: "scale_spx222"
+  simulation: true
+  critical: true
+  attach:
+    parent_name: "fixture_plate_1"
+    parent_solid: "body"
+    parent_anchor: "D12"
+    child_solid: "body"
+    child_anchor: "hole_0"
+    offset: [0, 0, 0, 0, 0, 90]
+
+scaletop_falcon_15ml_1:
+  type: "scale_top_falcon_15ml"
+  attach:
+    parent_name: "scale_spx222_1"
+    parent_solid: "body"
+    parent_anchor: "place"
+    child_solid: "body"
+    child_anchor: "center"
+    offset: [0, 0, 0, 0, 0, 0]
+
+# ── Camera (vertical vision station) on plate 1/B3 ──────────────────
+inspection_vertical_144mm_1:
+  type: "inspection_vertical_144mm"
+  attach:
+    parent_name: "fixture_plate_1"
+    parent_solid: "body"
+    parent_anchor: "B3"
+    child_solid: "body"
+    child_anchor: "hole_0"
+    offset: [0, 0, 0, 0, 0, 0]
+
+# ── Barcode reader (Zebra DS457, vertical) on plate 1/F3 ────────────
+barcode_reader_1:
+  type: "barcode_reader_zebra_vertical_144mm"
+  simulation: true
+  critical: true
+  attach:
+    parent_name: "fixture_plate_1"
+    parent_solid: "body"
+    parent_anchor: "F3"
+    child_solid: "body"
+    child_anchor: "hole_0"
+    offset: [0, 0, 0, 0, 0, 0]
