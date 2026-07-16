@@ -198,7 +198,8 @@ capholder_falcon_15ml_1:
 # ── Scale (OHAUS SPX222) on plate 1/D12, falcon holder on top ───────
 scale_spx222_1:
   type: "scale_spx222"
-  simulation: true
+  simulation: false
+  ip: "10.0.2.50"
   critical: true
   attach:
     parent_name: "fixture_plate_1"
@@ -293,6 +294,28 @@ collision_box_5:
     parent_name: "decapper_1"
     parent_solid: "body"
     parent_anchor: "center"
+    child_solid: "body"
+    child_anchor: "center"
+    offset: [0, 0, 0, 0, 0, 0]
+
+collision_box_6:
+  type: "collision_box"
+  size: [100, 10, 456]
+  attach:
+    parent_name: "fixture_plate_4"
+    parent_solid: "body"
+    parent_anchor: "A18"
+    child_solid: "body"
+    child_anchor: "center"
+    offset: [0, 0, 0, 0, 0, 0]
+
+collision_box_7:
+  type: "collision_box"
+  size: [10, 100, 456]
+  attach:
+    parent_name: "fixture_plate_5"
+    parent_solid: "body"
+    parent_anchor: "I20"
     child_solid: "body"
     child_anchor: "center"
     offset: [0, 0, 0, 0, 0, 0]
