@@ -82,6 +82,10 @@ VOL_UL        = 400    # microliters dispensed per tube
 
 # Motion parameters
 GRAV_OFFSET   = 4      # mm — gravity press applied on every release
+# Planner gravity constraint for planned travel hops while carrying:
+# keep the payload upright (+z) within 5 deg of tilt. Passed as
+# motion_plan_kwargs to the actions that fly with a tube or tip.
+MOTION_PLAN_GRAVITY = {"gravity_vec": [0, 0, 1], "gravity_thr": 5}
 # Present pose tweak for camera + barcode, xyzabc in the station's
 # "place"-anchor frame: 50 mm lower in z.
 PRESENT_OFFSET = [0, 0, -50, 0, 0, 0]
@@ -203,7 +207,7 @@ class Pick(Action):
         slot = _slot(self, tube)
         rt.step(f"tube {tube + 1} [{slot}]: pick")
         rt.step(_progress_pct(self), level="progress")
-        rcp["falcon_rack"].pick(slot, soft_approach=True)
+        rcp["falcon_rack"].pick(slot, soft_approach=True, motion_plan_kwargs=MOTION_PLAN_GRAVITY)
         return "picked"
 
 
@@ -427,7 +431,7 @@ class Return(Action):
         slot = _slot(self, tube)
         rt.step(f"tube {tube + 1}: return to rack [{slot}]")
         rt.step(_progress_pct(self), level="progress")
-        rcp["falcon_rack"].place(slot, gravity_offset=GRAV_OFFSET, soft_approach=False)
+        rcp["falcon_rack"].place(slot, gravity_offset=GRAV_OFFSET, soft_approach=False, motion_plan_kwargs=MOTION_PLAN_GRAVITY)
         return "returned"
 
 
@@ -453,7 +457,7 @@ class PickTip(Action):
         rt.step(_progress_pct(self), level="progress")
         # pick_tip verifies via the tip sensor — False also covers an
         # unreachable pump (declarative retry, no loop).
-        if not rcp["tip_rack"].pick_tip(tip):
+        if not rcp["tip_rack"].pick_tip(tip, motion_plan_kwargs=MOTION_PLAN_GRAVITY):
             rt.step(f"tube {tube + 1}: no tip detected — check the pipettor, then Resume")
             return False
         return "tipped"
