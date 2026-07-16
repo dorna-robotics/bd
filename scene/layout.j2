@@ -48,7 +48,7 @@ pipettor:
   type: "pipettor_sp28_40mm"
   has_tool_changer: true
   simulation: true
-  port: ""
+  port: "/dev/serial/by-id/usb-FTDI_FT232R_USB_UART_BG01X4OW-if00-port0"
   attach:
     parent_name: "tool_rack_192mm_1"
     parent_solid: "body"
@@ -235,6 +235,7 @@ barcode_reader_1:
   type: "barcode_reader_zebra_vertical_144mm"
   simulation: true
   critical: true
+  port: "/dev/serial/by-id/usb-Symbol_Technologies__Inc__2008_Symbol_Bar_Code_Scanner_S_N:Symbol_Bar_Code_Scanner_____-if00"
   attach:
     parent_name: "fixture_plate_1"
     parent_solid: "body"
