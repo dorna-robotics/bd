@@ -48,6 +48,7 @@ pipettor:
   type: "pipettor_sp28_40mm"
   has_tool_changer: true
   simulation: true
+  port: ""
   attach:
     parent_name: "tool_rack_192mm_1"
     parent_solid: "body"
@@ -239,4 +240,59 @@ barcode_reader_1:
     parent_anchor: "H3"
     child_solid: "body"
     child_anchor: "hole_0"
+    offset: [0, 0, 0, 0, 0, 0]
+
+collision_box_1:
+  type: "collision_box"
+  size: [163, 115, 125]
+  attach:
+    parent_name: "rack_falcon_15ml_1"
+    parent_solid: "body"
+    parent_anchor: "center"
+    child_solid: "body"
+    child_anchor: "center"
+    offset: [0, 0, 0, 0, 0, 0]
+
+collision_box_2:
+  type: "collision_box"
+  size: [165, 115, 13]
+  attach:
+    parent_name: "capholder_falcon_15ml_1"
+    parent_solid: "body"
+    parent_anchor: "center"
+    child_solid: "body"
+    child_anchor: "center"
+    offset: [0, 0, 0, 0, 0, 0]
+
+collision_box_3:
+  type: "collision_box"
+  size: [30, 30, 131]
+  attach:
+    parent_name: "scaletop_falcon_15ml_1"
+    parent_solid: "body"
+    parent_anchor: "center"
+    child_solid: "body"
+    child_anchor: "center"
+    offset: [0, 0, 0, 0, 0, 0]
+
+collision_box_4:
+  type: "collision_box"
+  size: [123, 82, 59]
+  attach:
+    parent_name: "rack_tip"
+    parent_solid: "body"
+    parent_anchor: "center"
+    child_solid: "body"
+    child_anchor: "center"
+    offset: [0, 0, 0, 0, 0, 0]
+
+collision_box_5:
+  type: "collision_box"
+  size: [22, 22, 166]
+  attach:
+    parent_name: "decapper_1"
+    parent_solid: "body"
+    parent_anchor: "center"
+    child_solid: "body"
+    child_anchor: "center"
     offset: [0, 0, 0, 0, 0, 0]
