@@ -183,14 +183,6 @@ class Start(Action):
             if not rcp["robot"].set_axis_with_stop(core.rail_cfg):
                 rt.step("homing failed")
                 return "killed"
-        # Home the pipettor pump (plunger initialize) so the tip sensor
-        # and volume registers are valid — canned True in sim. An
-        # off/unreachable pump only WARNS here: the pipettor chain's own
-        # actions fail with their message if it is still down when the
-        # pump is actually needed.
-        rt.step("homing pipettor pump")
-        if not ws.components["pipettor"].initialize():
-            rt.step("pipettor pump unavailable — Reconnect it before the pipetting steps")
         rcp["robot"].park(joint=self.START_JOINTS, has_motion_plan=True)
         return "started"
 
