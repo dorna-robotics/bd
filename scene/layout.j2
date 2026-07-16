@@ -300,14 +300,26 @@ collision_box_5:
 
 collision_box_6:
   type: "collision_box"
-  size: [100, 150, 600]
+  size: [100, 10, 456]
   attach:
-    parent_name: "tool_rack_192mm_1"
+    parent_name: "fixture_plate_5"
     parent_solid: "body"
-    parent_anchor: "center"
+    parent_anchor: "G18"
     child_solid: "body"
     child_anchor: "center"
     offset: [0, 0, 0, 0, 0, 0]
+
+collision_box_7:
+  type: "collision_box"
+  size: [10, 100, 456]
+  attach:
+    parent_name: "fixture_plate_5"
+    parent_solid: "body"
+    parent_anchor: "I20"
+    child_solid: "body"
+    child_anchor: "center"
+    offset: [0, 0, 0, 0, 0, 0]
+
 
 
 
