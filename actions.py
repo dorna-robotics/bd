@@ -82,6 +82,7 @@ VOL_UL        = 400    # microliters dispensed per tube
 
 # Motion parameters
 GRAV_OFFSET   = 4      # mm — gravity press applied on every release
+SCALE_GRAV_OFFSET = GRAV_OFFSET + 5   # mm — extra press to seat the tube on the scaletop
 # Planner gravity constraint for planned travel hops while carrying:
 # keep the payload within 45 deg of upright. The platform falls back
 # to an unconstrained (still collision-checked) plan if unsatisfiable.
@@ -228,7 +229,7 @@ class PlaceOnScale(Action):
         rt, rcp = self.ctx.runtime, self.ctx.recipes
         rt.step(f"tube {tube + 1}: place on scale")
         rt.step(_progress_pct(self), level="progress")
-        rcp["scale_holder"].place("place", gravity_offset=GRAV_OFFSET, soft_approach=False)
+        rcp["scale_holder"].place("place", gravity_offset=SCALE_GRAV_OFFSET, soft_approach=False)
         return "on_scale"
 
 
