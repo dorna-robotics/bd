@@ -5,7 +5,7 @@
 # (park(joint=...), motor). Same across every project.
 robot:
   class: workspace.recipes.recipe.Recipe
-  kwargs: {speed_factor: {{ sf }}}
+  kwargs: {speed_factor: {{ sf }}, has_motion_plan: [false, jmove]}
 
 # Large tube gripper, parked in the 144 mm tool rack.
 gripper:
