@@ -207,7 +207,7 @@ class Pick(Action):
         slot = _slot(self, tube)
         rt.step(f"tube {tube + 1} [{slot}]: pick")
         rt.step(_progress_pct(self), level="progress")
-        rcp["falcon_rack"].pick(slot, soft_approach=True, motion_plan_kwargs=MOTION_PLAN_GRAVITY)
+        rcp["falcon_rack"].pick(slot, soft_approach=True, padding=100, motion_plan_kwargs=MOTION_PLAN_GRAVITY)
         return "picked"
 
 
@@ -388,7 +388,7 @@ class ParkCap(Action):
         cap_slot = _cap_slot(self, tube)
         rt.step(f"tube {tube + 1}: cap to holder [{cap_slot}]")
         rt.step(_progress_pct(self), level="progress")
-        rcp["capholder"].place(cap_slot, soft_approach=True, gravity_offset=GRAV_OFFSET)
+        rcp["capholder"].place(cap_slot, soft_approach=True, padding=100, gravity_offset=GRAV_OFFSET)
         return "cap_parked"
 
 
