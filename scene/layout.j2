@@ -26,6 +26,10 @@ tool_rack_144mm_1:
 gripper_tube_large_1:
   type: "gripper_tube_large"
   has_tool_changer: true
+  # override the tcp anchor Z (component default 49.5) — deep-merged over DEFAULTS
+  anchors:
+    body:
+      tcp: [0, 0, 48, 0, 0, -90]
   attach:
     parent_name: "tool_rack_144mm_1"
     parent_solid: "body"
@@ -49,6 +53,10 @@ pipettor:
   has_tool_changer: true
   simulation: false
   port: "/dev/serial/by-id/usb-FTDI_FT232R_USB_UART_BG01X4OW-if00-port0"
+  # override the tcp anchor Z (component default 175) — deep-merged over DEFAULTS
+  anchors:
+    body:
+      tcp: [0, 0, 173, 0, 0, 0]
   attach:
     parent_name: "tool_rack_192mm_1"
     parent_solid: "body"

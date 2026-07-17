@@ -493,10 +493,11 @@ class Dispense(Action):
 
 class EjectTip(Action):
     """Drop the used tip into the waste bin."""
-    params   = ["tube"]
-    duration = 6
-    resource = "robot"
-    tool     = "pipettor"
+    params       = ["tube"]
+    duration     = 6
+    resource     = "robot"
+    tool         = "pipettor"
+    SHAKE_TRAVEL = 10   # lateral ± shake (mm) to dislodge the tip on exit
 
     def pre(self, tube):
         return dispensed(tube) & ~ejected(tube)
@@ -510,7 +511,7 @@ class EjectTip(Action):
         rt.step(_progress_pct(self), level="progress")
         # TEMPORARY (blind mode): outcome deliberately ignored while the
         # pump comms are being sorted out — eject, assume success.
-        rcp["waste_bin"].eject_tip()
+        rcp["waste_bin"].eject_tip(shake_travel=self.SHAKE_TRAVEL)
         return "ejected"
 
 
