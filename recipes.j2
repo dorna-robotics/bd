@@ -10,13 +10,13 @@ robot:
 # Large tube gripper, parked in the 144 mm tool rack.
 gripper:
   class: workspace.recipes.tool_rack.ToolRack
-  kwargs: {component: tool_rack_144mm_1, left_approach: true, speed_factor: {{ sf }}}
+  kwargs: {component: tool_rack_144mm_1, left_approach: true, speed_factor: {{ sf }}, lmove_vaj: [600, 1400, 6000]}
 
 # Pipettor, parked in the 192 mm tool rack (actions mount it via
 # ``tool = "pipettor"``).
 pipettor:
   class: workspace.recipes.tool_rack.ToolRack
-  kwargs: {component: tool_rack_192mm_1, left_approach: true, speed_factor: {{ sf }}}
+  kwargs: {component: tool_rack_192mm_1, left_approach: true, speed_factor: {{ sf }}, lmove_vaj: [600, 1400, 6000]}
 
 # Falcon rack — Rack over the falcon adapter (gripper tube pick/place);
 # resolves to rack_falcon_15ml_1.
