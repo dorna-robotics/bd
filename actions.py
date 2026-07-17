@@ -455,11 +455,9 @@ class PickTip(Action):
         tip = _tip(self, tube)
         rt.step(f"tube {tube + 1}: tip [{tip}]")
         rt.step(_progress_pct(self), level="progress")
-        # pick_tip verifies via the tip sensor — False also covers an
-        # unreachable pump (declarative retry, no loop).
-        if not rcp["tip_rack"].pick_tip(tip):
-            rt.step(f"tube {tube + 1}: no tip detected — check the pipettor, then Resume")
-            return False
+        # TEMPORARY (blind mode): outcome deliberately ignored while the
+        # pump comms are being sorted out — do the motion, assume success.
+        rcp["tip_rack"].pick_tip(tip)
         return "tipped"
 
 
@@ -486,13 +484,10 @@ class Dispense(Action):
         rt.step(f"tube {tube + 1} [{slot}]: dispense {VOL_UL} µL")
         rt.step(_progress_pct(self), level="progress")
         rcp["falcon_pipette"].immerse(anchor=slot, depth=IMMERSE_DEPTH)
-        ok = rcp["falcon_pipette"].dispense(vol=VOL_UL)
-        # ALWAYS retract — never leave the needle immersed, even when
-        # the pump refused (unreachable device → False).
+        # TEMPORARY (blind mode): pump outcome deliberately ignored while
+        # the comms are being sorted out — dispense, retract, assume success.
+        rcp["falcon_pipette"].dispense(vol=VOL_UL)
         rcp["falcon_pipette"].retract(anchor=slot)
-        if not ok:
-            rt.step(f"tube {tube + 1}: pipettor pump unavailable — reconnect it, then Resume")
-            return False
         return "dispensed"
 
 
@@ -513,11 +508,9 @@ class EjectTip(Action):
         rt, rcp = self.ctx.runtime, self.ctx.recipes
         rt.step(f"tube {tube + 1}: tip to waste")
         rt.step(_progress_pct(self), level="progress")
-        # eject_tip verifies the tip is GONE via the sensor — False
-        # covers a stuck tip or an unreachable pump.
-        if not rcp["waste_bin"].eject_tip():
-            rt.step(f"tube {tube + 1}: tip still on — check the pipettor, then Resume")
-            return False
+        # TEMPORARY (blind mode): outcome deliberately ignored while the
+        # pump comms are being sorted out — eject, assume success.
+        rcp["waste_bin"].eject_tip()
         return "ejected"
 
 
