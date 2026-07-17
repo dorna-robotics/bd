@@ -1,11 +1,4 @@
 {%- set sf = 0.2 -%}
-{#- Falcon rack IK knobs — boot-time reference-joint search. NOTE:
-    these are recipe-CONSTRUCTION parameters (boot IK), so they live
-    here, not in actions.py; changing base_distance also changes the
-    calibration key (see core.json note in the commit). -#}
-{%- set falcon_base = 150 -%}
-{%- set falcon_rail_step = 25 -%}
-{%- set falcon_rail_span = 20 -%}
 
 # Robot (generic): base Recipe with NO component. Owns no station, does no
 # boot-time IK — the stable handle for robot-level Start/Park calls
@@ -29,7 +22,7 @@ pipettor:
 # resolves to rack_falcon_15ml_1.
 falcon_rack:
   class: workspace.recipes.rack.Rack
-  kwargs: {component: adapter_plate_falcon_15ml_1, left_approach: false, base_distance: {{ falcon_base }}, rail_step: {{ falcon_rail_step }}, rail_span: {{ falcon_rail_span }}, speed_factor: {{ sf }}}
+  kwargs: {component: adapter_plate_falcon_15ml_1, left_approach: false, base_distance: 100, rail_step: 25, rail_span: 20, speed_factor: {{ sf }}}
 
 # PipettingSite on the falcon adapter — immerse / aspirate / dispense /
 # retract into the rack's tubes. Printer params (base_distance=200).
