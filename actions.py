@@ -183,7 +183,7 @@ class Start(Action):
             if not rcp["robot"].set_axis_with_stop(core.rail_cfg):
                 rt.step("homing failed")
                 return "killed"
-        rcp["robot"].park(joint=self.START_JOINTS, has_motion_plan=True)
+        rcp["robot"].park(joint=self.START_JOINTS)
         return "started"
 
 
@@ -541,7 +541,7 @@ class Park(Action):
 
     def execute(self):
         rcp = self.ctx.recipes
-        rcp["robot"].park(joint=self.PARK_JOINTS, has_motion_plan=True)
+        rcp["robot"].park(joint=self.PARK_JOINTS)
         return "parked"
 
 
