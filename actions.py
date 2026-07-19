@@ -86,7 +86,7 @@ SCALE_GRAV_OFFSET = GRAV_OFFSET + 5   # mm — extra press to seat the tube on t
 # Planner gravity constraint for planned travel hops while carrying:
 # keep the payload within 45 deg of upright. The platform falls back
 # to an unconstrained (still collision-checked) plan if unsatisfiable.
-MOTION_PLAN_GRAVITY = {"gravity_vec": [0, 0, 1], "gravity_thr": 45, "planner": "aitstar", "time_limit_sec": 5}
+MOTION_PLAN_GRAVITY = {"gravity_vec": [0, 0, 1], "gravity_thr": 45}
 # Present pose tweak for camera + barcode, xyzabc in the station's
 # "place"-anchor frame: 50 mm lower in z.
 PRESENT_OFFSET = [0, 0, -50, 0, 0, 0]
@@ -432,7 +432,7 @@ class Return(Action):
         slot = _slot(self, tube)
         rt.step(f"tube {tube + 1}: return to rack [{slot}]")
         rt.step(_progress_pct(self), level="progress")
-        rcp["falcon_rack"].place(slot, gravity_offset=GRAV_OFFSET, soft_approach=False, motion_plan_kwargs=MOTION_PLAN_GRAVITY)
+        rcp["falcon_rack"].place(slot, gravity_offset=GRAV_OFFSET, soft_approach=False)
         return "returned"
 
 
