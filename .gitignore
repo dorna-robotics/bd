@@ -5,3 +5,4 @@ __pycache__/
 status/
 core.json
 core_ik.json
+core_path.json
