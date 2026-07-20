@@ -64,7 +64,7 @@ scale:
 # handle's job above.
 scale_holder:
   class: workspace.recipes.recipe.Recipe
-  kwargs: {component: scaletop_falcon_15ml_1, target_anchor: place, base_distance: 50, rail_step: 25, rail_span: 20, speed_factor: {{ sf }}}
+  kwargs: {component: scaletop_falcon_15ml_1, target_anchor: place, base_distance: 50, rail_step: 25, rail_span: 20, padding: 30, speed_factor: {{ sf }}}
 
 # Camera — present the held tube to the vertical station + detect().
 # left_approach false: the station x (-164.7 in the rail frame) is past
