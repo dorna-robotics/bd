@@ -229,7 +229,7 @@ class PlaceOnScale(Action):
         rt, rcp = self.ctx.runtime, self.ctx.recipes
         rt.step(f"tube {tube + 1}: place on scale")
         rt.step(_progress_pct(self), level="progress")
-        rcp["scale_holder"].place("place", padding=20, gravity_offset=SCALE_GRAV_OFFSET, soft_approach=False)
+        rcp["scale_holder"].place("place", padding=30, gravity_offset=SCALE_GRAV_OFFSET, soft_approach=False)
         return "on_scale"
 
 
@@ -279,7 +279,7 @@ class PickFromScale(Action):
         rt, rcp = self.ctx.runtime, self.ctx.recipes
         rt.step(f"tube {tube + 1}: pick off scale")
         rt.step(_progress_pct(self), level="progress")
-        rcp["scale_holder"].pick("place", padding=20, soft_approach=True)
+        rcp["scale_holder"].pick("place", padding=30, soft_approach=True)
         return "off_scale"
 
 
