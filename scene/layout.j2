@@ -51,7 +51,7 @@ tool_rack_192mm_1:
 pipettor:
   type: "pipettor_sp28_40mm"
   has_tool_changer: true
-  simulation: false
+  simulation: true
   port: "/dev/serial/by-id/usb-FTDI_FT232R_USB_UART_BG01X4OW-if00-port0"
   # override the tcp anchor Z (component default 175) — deep-merged over DEFAULTS
   anchors:
@@ -206,7 +206,7 @@ capholder_falcon_15ml_1:
 # ── Scale (OHAUS SPX222) on plate 1/D12, falcon holder on top ───────
 scale_spx222_1:
   type: "scale_spx222"
-  simulation: false
+  simulation: true
   ip: "10.0.2.50"
   critical: true
   attach:

@@ -86,7 +86,7 @@ SCALE_GRAV_OFFSET = GRAV_OFFSET + 5   # mm — extra press to seat the tube on t
 # Planner gravity constraint for planned travel hops while carrying:
 # keep the payload within 45 deg of upright. The platform falls back
 # to an unconstrained (still collision-checked) plan if unsatisfiable.
-MOTION_PLAN_GRAVITY = {"gravity_vec": [0, 0, 1], "gravity_thr": 45}
+MOTION_PLAN_GRAVITY = {"gravity_vec": [0, 0, 1], "gravity_thr": 15, "planner": "aitstar", "time_limit_sec": 10}
 # Present pose tweak for camera + barcode, xyzabc in the station's
 # "place"-anchor frame: 50 mm lower in z.
 PRESENT_OFFSET = [0, 0, -50, 0, 0, 0]
@@ -389,7 +389,7 @@ class ParkCap(Action):
         cap_slot = _cap_slot(self, tube)
         rt.step(f"tube {tube + 1}: cap to holder [{cap_slot}]")
         rt.step(_progress_pct(self), level="progress")
-        rcp["capholder"].place(cap_slot, soft_approach=True, gravity_offset=GRAV_OFFSET)
+        rcp["capholder"].place(cap_slot, soft_approach=True, gravity_offset=GRAV_OFFSET, motion_plan_kwargs=MOTION_PLAN_GRAVITY)
         return "cap_parked"
 
 
