@@ -1,11 +1,5 @@
 # bd — launch config.
 #
-# Per tube: pick → decap (cap parked at its own index on the cap holder)
-# → tube back → pipettor: fresh tip → aspirate from the D5 reservoir →
-# dispense → tip to waste → re-cap the tube → weigh on the scale →
-# camera → barcode → return it. Every measurement is therefore taken on
-# the finished, capped tube. tube_count sets how many tubes to run.
-#
 # Rack slot D5 holds the OPEN reservoir tube every dose is drawn from, so
 # it is never processed — 19 of the 20 slots are available.
 
@@ -24,6 +18,6 @@ kwargs:
     type: int
     default: 1
     label: Tubes to process
-    hint: How many tubes to run (pick → decap → dispense → cap → weigh → camera → barcode → return). D5 is the reservoir, so 19 slots are available.
+    hint: How many tubes to run. D5 is the reservoir, so 19 slots are available.
     min: 1
     max: 19
