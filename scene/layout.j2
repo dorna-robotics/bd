@@ -2,7 +2,8 @@
 #
 # The falcon-tube processing bench:
 #   - tool rack 144 (tube gripper) + tool rack 192 (pipettor) on plate 5
-#   - falcon rack on plate 4/D9, FULL: 20 capped tubes
+#   - falcon rack on plate 4/D9, FULL: 20 tubes — 19 capped + D5 open
+#     (D5 is the reservoir the pipettor aspirates from)
 #   - tip rack (96 tips) on plate 4/C19, tip waste bin on plate 4/G19
 #   - decapper on plate 4/A7
 #   - falcon 15 cap holder on plate 4/E1 (empty — caps park here mid-flow)
@@ -106,6 +107,9 @@ tube_falcon_{{ r }}{{ c }}:
     child_anchor: "center"
     offset: [0, 0, 0, 0, 0, 0]
 
+{#- D5 is the reservoir: an OPEN tube (no cap) the pipettor aspirates
+    from, so it is never decapped, processed or re-capped. -#}
+{% if not (r == "D" and c == 5) %}
 cap_falcon_{{ r }}{{ c }}:
   type: "cap_falcon_15ml"
   twist: 950
@@ -116,6 +120,7 @@ cap_falcon_{{ r }}{{ c }}:
     child_solid: "body"
     child_anchor: "center"
     offset: [0, 0, 0, 0, 0, 0]
+{% endif %}
 {% endfor %}
 {% endfor %}
 

@@ -22,8 +22,23 @@ from observed state and re-selects exactly the step that didn't happen
 
   Pipettor (tool = "pipettor", swap handled by the planner):
    11. PickTip        fresh tip t from the tip rack
-   12. Dispense       immerse → dispense → retract (one physical unit)
-   13. EjectTip       drop the used tip into the waste bin
+   12. Aspirate       draw the dose from the D5 reservoir (one physical
+                      unit: immerse → aspirate → retract)
+   13. Dispense       immerse → dispense → retract into tube t
+   14. EjectTip       drop the used tip into the waste bin
+
+  Tube gripper again — re-cap (the printer project is the reference for
+  the cap(exit=False) + pick(approach=False) pair):
+   15. PickForCap     pick the (open, dosed) tube off the rack
+   16. PlaceInDecapper seat it in the decapper
+   17. PickCap        pick its own cap back off the cap holder
+   18. Cap            screw the cap on + lift the capped tube out
+   19. ReturnCapped   return the capped tube to its rack slot
+
+Slot D5 of the falcon rack is the RESERVOIR: an open (uncapped) tube the
+pipettor aspirates every dose from. It is never picked, weighed, decapped
+or re-capped — ``tube_count`` is clamped so the processed tubes never
+reach it (see ``MAX_TUBES``).
 
 Device reads + declarative retry (project-guide §8): ``Weigh`` / ``Scan``
 assert their fact ONLY on a valid reading and ``return False`` otherwise
@@ -56,8 +71,15 @@ cap_parked = predicate("cap_parked")  # cap parked at holder index t
 retrieved  = predicate("retrieved")   # open tube back in the gripper
 returned   = predicate("returned")    # tube back in its rack slot
 tipped     = predicate("tipped")      # fresh tip on the pipettor
+aspirated  = predicate("aspirated")   # dose drawn from the D5 reservoir
 dispensed  = predicate("dispensed")   # volume dispensed into the tube
-ejected    = predicate("ejected")     # used tip in the waste bin (= done)
+ejected    = predicate("ejected")     # used tip in the waste bin
+# Re-cap chain — runs on the gripper once the tube has been dosed.
+recap_held  = predicate("recap_held")   # dosed tube back in the gripper
+in_decapper = predicate("in_decapper")  # dosed tube seated in the decapper
+cap_held    = predicate("cap_held")     # its own cap back in the gripper
+capped      = predicate("capped")       # cap screwed on, tube in the gripper
+recapped    = predicate("recapped")     # capped tube back in its slot (= done)
 parked     = predicate("parked")
 
 # ── Single-occupancy resources (capacity-1, no args) ──────────────────
@@ -78,7 +100,13 @@ TIP_RACK    = "rack_tip"
 
 # Pipetting parameters
 IMMERSE_DEPTH = 20     # mm below the tube top
-VOL_UL        = 400    # microliters dispensed per tube
+VOL_UL        = 400    # microliters aspirated from D5 → dispensed per tube
+# Reservoir: the rack slot holding the OPEN (uncapped) source tube every
+# dose is drawn from. The rack's slot list is row-major (A1..A5, B1..B5,
+# C1..C5, D1..D5), so D5 is the last of the 20 — reserving it leaves
+# MAX_TUBES slots for the processed tubes and keeps the two disjoint.
+SOURCE_SLOT   = "D5"
+MAX_TUBES     = 19
 
 # Motion parameters
 GRAV_OFFSET   = 4      # mm — gravity press applied on every release
@@ -91,11 +119,12 @@ MOTION_PLAN_GRAVITY = {"gravity_vec": [0, 0, 1], "gravity_thr": 15, "planner": "
 # "place"-anchor frame: 50 mm lower in z.
 PRESENT_OFFSET = [0, 0, -50, 0, 0, 0]
 
-_STEPS = 13            # per-tube steps for progress
+_STEPS = 19            # per-tube steps for progress
 
 _CHAIN = (picked, on_scale, weighed, off_scale, inspected, scanned,
-          decapped, cap_parked, retrieved, returned, tipped, dispensed,
-          ejected)
+          decapped, cap_parked, retrieved, returned, tipped, aspirated,
+          dispensed, ejected, recap_held, in_decapper, cap_held, capped,
+          recapped)
 
 
 def _slot(action, tube):
@@ -122,11 +151,13 @@ def _progress_pct(action) -> int:
 
 
 def setup(**kwargs):
-    tube_count = int(kwargs.get("tube_count", 1))
+    # Clamp: slot D5 is the reservoir, so it must never be handed out as
+    # a processed tube (see SOURCE_SLOT).
+    tube_count = max(0, min(int(kwargs.get("tube_count", 1)), MAX_TUBES))
     tubes = list(range(tube_count))
 
     def item_done(state, tube):
-        return (ejected.name, tube) in state
+        return (recapped.name, tube) in state
 
     def goal(state):
         return (
@@ -136,7 +167,7 @@ def setup(**kwargs):
         )
 
     goal_facts = frozenset(
-        [(ejected.name, t) for t in tubes]
+        [(recapped.name, t) for t in tubes]
         + [(started.name,), (parked.name,)]
     )
 
@@ -473,8 +504,37 @@ class PickTip(Action):
         return "tipped"
 
 
+class Aspirate(Action):
+    """Draw the dose from the D5 reservoir.
+
+    immerse → aspirate → retract stay ONE action, same rule as Dispense:
+    the needle must never be left immersed across a replan boundary. The
+    tip ends loaded and clear of the reservoir."""
+    params   = ["tube"]
+    duration = 12
+    resource = "robot"
+    tool     = "pipettor"
+
+    def pre(self, tube):
+        return tipped(tube) & ~aspirated(tube)
+
+    def eff(self, tube):
+        return {"aspirated": (+aspirated(tube),)}
+
+    def execute(self, tube):
+        rt, rcp = self.ctx.runtime, self.ctx.recipes
+        rt.step(f"tube {tube + 1}: aspirate {VOL_UL} µL from [{SOURCE_SLOT}]")
+        rt.step(_progress_pct(self), level="progress")
+        rcp["falcon_pipette"].immerse(anchor=SOURCE_SLOT, depth=IMMERSE_DEPTH)
+        # TEMPORARY (blind mode): pump outcome deliberately ignored while
+        # the comms are being sorted out — aspirate, retract, assume success.
+        rcp["falcon_pipette"].aspirate(vol=VOL_UL)
+        rcp["falcon_pipette"].retract(anchor=SOURCE_SLOT)
+        return "aspirated"
+
+
 class Dispense(Action):
-    """Dispense into the (uncapped) tube.
+    """Dispense the aspirated dose into the (uncapped) tube.
 
     immerse → dispense → retract stay ONE action: the needle must not be
     left immersed across a replan boundary, so the three recipe calls
@@ -485,7 +545,7 @@ class Dispense(Action):
     tool     = "pipettor"
 
     def pre(self, tube):
-        return tipped(tube) & ~dispensed(tube)
+        return aspirated(tube) & ~dispensed(tube)
 
     def eff(self, tube):
         return {"dispensed": (+dispensed(tube),)}
@@ -527,6 +587,131 @@ class EjectTip(Action):
         return "ejected"
 
 
+# ── Re-cap chain (tube gripper again) ─────────────────────────────────
+# Mirror of the decap chain: the tube goes back into the decapper, its
+# own cap comes off the holder, and the decapper screws it on. The
+# printer project is the reference for the cap/pick pairing.
+
+class PickForCap(Action):
+    """Pick the dosed (open) tube back off its rack slot."""
+    params   = ["tube"]
+    duration = 10
+    resource = "robot"
+    tool     = "gripper"
+
+    def pre(self, tube):
+        return ejected(tube) & hand_empty() & ~recap_held(tube)
+
+    def eff(self, tube):
+        return {"recap_held": (+recap_held(tube), -hand_empty())}
+
+    def execute(self, tube):
+        rt, rcp = self.ctx.runtime, self.ctx.recipes
+        slot = _slot(self, tube)
+        rt.step(f"tube {tube + 1} [{slot}]: pick to re-cap")
+        rt.step(_progress_pct(self), level="progress")
+        rcp["falcon_rack"].pick(slot, soft_approach=True, motion_plan_kwargs=MOTION_PLAN_GRAVITY)
+        return "recap_held"
+
+
+class PlaceInDecapper(Action):
+    """Seat the dosed tube in the decapper, ready for its cap."""
+    params   = ["tube"]
+    duration = 8
+    resource = "robot"
+    tool     = "gripper"
+
+    def pre(self, tube):
+        return recap_held(tube) & decapper_free() & ~in_decapper(tube)
+
+    def eff(self, tube):
+        return {"in_decapper": (+in_decapper(tube), +hand_empty(),
+                                -decapper_free())}
+
+    def execute(self, tube):
+        rt, rcp = self.ctx.runtime, self.ctx.recipes
+        rt.step(f"tube {tube + 1}: into the decapper")
+        rt.step(_progress_pct(self), level="progress")
+        rcp["decapper"].place()
+        return "in_decapper"
+
+
+class PickCap(Action):
+    """Pick the tube's own cap back off the cap holder."""
+    params   = ["tube"]
+    duration = 8
+    resource = "robot"
+    tool     = "gripper"
+
+    def pre(self, tube):
+        return in_decapper(tube) & cap_parked(tube) & hand_empty() & ~cap_held(tube)
+
+    def eff(self, tube):
+        # The cap leaves the holder — drop cap_parked so the slot reads
+        # empty again.
+        return {"cap_held": (+cap_held(tube), -hand_empty(),
+                             -cap_parked(tube))}
+
+    def execute(self, tube):
+        rt, rcp = self.ctx.runtime, self.ctx.recipes
+        cap_slot = _cap_slot(self, tube)
+        rt.step(f"tube {tube + 1}: cap from holder [{cap_slot}]")
+        rt.step(_progress_pct(self), level="progress")
+        rcp["capholder"].pick(cap_slot, soft_approach=True, motion_plan_kwargs=MOTION_PLAN_GRAVITY)
+        return "cap_held"
+
+
+class Cap(Action):
+    """Screw the cap on and lift the capped tube out.
+
+    cap(exit=False) + pick(approach=False) stay ONE action, the mirror of
+    Decap: the pair is a single continuous physical unit, so no other
+    motion may be planned between them. The gripper hands the cap over to
+    the tube and comes back holding the capped tube."""
+    params   = ["tube"]
+    duration = 15
+    resource = "robot"
+    tool     = "gripper"
+
+    def pre(self, tube):
+        return cap_held(tube) & ~capped(tube)
+
+    def eff(self, tube):
+        # Cap → tube, then the capped tube → gripper: the hand is busy
+        # on both sides of the swap, so only the decapper frees up.
+        return {"capped": (+capped(tube), +decapper_free())}
+
+    def execute(self, tube):
+        rt, rcp = self.ctx.runtime, self.ctx.recipes
+        rt.step(f"tube {tube + 1}: cap")
+        rt.step(_progress_pct(self), level="progress")
+        rcp["decapper"].cap(exit=False)
+        rcp["decapper"].pick(approach=False)
+        return "capped"
+
+
+class ReturnCapped(Action):
+    """Return the capped tube to its rack slot — the tube is done."""
+    params   = ["tube"]
+    duration = 8
+    resource = "robot"
+    tool     = "gripper"
+
+    def pre(self, tube):
+        return capped(tube) & ~recapped(tube)
+
+    def eff(self, tube):
+        return {"recapped": (+recapped(tube), +hand_empty())}
+
+    def execute(self, tube):
+        rt, rcp = self.ctx.runtime, self.ctx.recipes
+        slot = _slot(self, tube)
+        rt.step(f"tube {tube + 1}: capped, back to rack [{slot}]")
+        rt.step(_progress_pct(self), level="progress")
+        rcp["falcon_rack"].place(slot, gravity_offset=GRAV_OFFSET, soft_approach=True, motion_plan_kwargs=MOTION_PLAN_GRAVITY)
+        return "recapped"
+
+
 class Park(Action):
     """Final park — planned once every tube is done."""
     params      = []
@@ -539,7 +724,7 @@ class Park(Action):
         tubes = self._ctx_all_objects().get("tube", [])
         expr = ~parked() & started()
         for t in tubes:
-            expr = expr & ejected(t)
+            expr = expr & recapped(t)
         return expr
 
     def eff(self):
