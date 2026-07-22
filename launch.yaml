@@ -21,3 +21,8 @@ kwargs:
     hint: How many tubes to run. D5 is the reservoir, so 19 slots are available.
     min: 1
     max: 19
+  print_label:
+    type: bool
+    default: false
+    label: Print label
+    hint: Print and apply a barcode label on each tube (on the printer, right after the pick) before it is decapped. Off skips the printer entirely.

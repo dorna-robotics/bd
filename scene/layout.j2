@@ -10,6 +10,7 @@
 #   - OHAUS SPX222 scale on plate 1/D12 with a falcon holder (scaletop) on top
 #   - camera (inspection_vertical_144mm) on plate 1/B3
 #   - barcode reader (Zebra DS457, vertical) on plate 1/F3
+#   - label printer (cab AXON 1) on plate 6/C13
 # All devices run in sim (no ip/port → no bus claim, canned data). For
 # real hardware add ip/port + simulation: false.
 
@@ -261,6 +262,28 @@ barcode_reader_1:
     parent_name: "fixture_plate_1"
     parent_solid: "body"
     parent_anchor: "H3"
+    child_solid: "body"
+    child_anchor: "hole_0"
+    offset: [0, 0, 0, 0, 0, 0]
+
+# ── Label printer (cab AXON 1) on plate 6/C13 ───────────────────────
+# The gripper presses the tube against the applicator pad ("place").
+# hole_0 at C13, no rotation: swept against C19/E19/G19/C13 x 0/90/180/270
+# — the only placements that solve boot IK AND plan a real path to the pad
+# with a tube in the gripper are on column 13; C19 (the old printer
+# project's spot) solves IK but the approach has no collision-free path.
+# ip "" → sim only, no bus claim. Set ip + simulation: false for the
+# real printer; it then claims "printer:<ip>" on the device panel.
+printer_1:
+  type: "printer_axon_1"
+  ip: ""
+  port: 9100
+  simulation: true
+  critical: true
+  attach:
+    parent_name: "fixture_plate_6"
+    parent_solid: "body"
+    parent_anchor: "C13"
     child_solid: "body"
     child_anchor: "hole_0"
     offset: [0, 0, 0, 0, 0, 0]

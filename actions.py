@@ -13,6 +13,10 @@ on the FINISHED tube.
 
   Tube gripper (tool = "gripper") — open the tube:
     1. Pick           pick the tube from the falcon rack
+    1b. PrintLabel    print + apply the barcode label on the printer —
+                      ONLY when the ``print_label`` launch kwarg is on
+                      (see setup(): with it off every tube starts already
+                      ``printed``, so the planner skips straight to Decap)
     2. Decap          place in the decapper + unscrew (cap → gripper)
     3. ParkCap        park the cap at index t on the cap holder
     4. RetrieveTube   pick the (open) tube back out of the decapper
@@ -70,6 +74,7 @@ from workspace.components.inspection.vision_station import CameraUnavailableErro
 # ── Per-tube facts (the action chain) ─────────────────────────────────
 started    = predicate("started")
 picked     = predicate("picked")      # tube in the gripper (off the rack)
+printed    = predicate("printed")     # barcode label printed + applied
 on_scale   = predicate("on_scale")    # tube released on the scaletop
 weighed    = predicate("weighed")     # a valid weight was read
 off_scale  = predicate("off_scale")   # tube re-gripped off the scaletop
@@ -118,6 +123,13 @@ FALCON_RACK = "rack_falcon_15ml_1"
 CAP_HOLDER  = "capholder_falcon_15ml_1"
 TIP_RACK    = "rack_tip"
 
+# Label printing (launch kwarg ``print_label``). The label carries the
+# tube's own rack slot, so the barcode Scan step later in the chain reads
+# back exactly what was printed here.
+LABEL_PREFIX = "BD-"
+LABEL_CODE   = "code128"   # what the Zebra DS457 reads back
+PRINTER_GRAV_OFFSET = 4    # mm — press onto the applicator pad
+
 # Pipetting parameters
 IMMERSE_DEPTH = 20     # mm below the tube top
 VOL_UL        = 400    # microliters aspirated from D5 → dispensed per tube
@@ -139,14 +151,18 @@ MOTION_PLAN_GRAVITY = {"gravity_vec": [0, 0, 1], "gravity_thr": 15, "planner": "
 # "place"-anchor frame: 50 mm lower in z.
 PRESENT_OFFSET = [0, 0, -50, 0, 0, 0]
 
-_STEPS = 19            # per-tube steps for progress
-
 # Execution order — _progress_pct counts each tube's FURTHEST entry,
 # so this tuple must stay in the order the actions actually run.
-_CHAIN = (picked, decapped, cap_parked, retrieved, returned,
-          tipped, aspirated, dispensed, ejected,
-          recap_held, in_decapper, cap_held, capped,
-          on_scale, weighed, off_scale, inspected, scanned, recapped)
+# ``printed`` is only in the chain when the print_label kwarg is on;
+# setup() picks the matching tuple so the bar is honest either way.
+_CHAIN_PRINT = (picked, printed, decapped, cap_parked, retrieved, returned,
+                tipped, aspirated, dispensed, ejected,
+                recap_held, in_decapper, cap_held, capped,
+                on_scale, weighed, off_scale, inspected, scanned, recapped)
+_CHAIN_PLAIN = tuple(p for p in _CHAIN_PRINT if p is not printed)
+
+_CHAIN  = _CHAIN_PLAIN       # rebound by setup()
+_STEPS  = len(_CHAIN)        # per-tube steps for progress
 
 
 def _slot(action, tube):
@@ -187,10 +203,25 @@ def _progress_pct(action) -> int:
 
 
 def setup(**kwargs):
+    global _CHAIN, _STEPS
+
     # Clamp: slot D5 is the reservoir, so it must never be handed out as
     # a processed tube (see SOURCE_SLOT).
     tube_count = max(0, min(int(kwargs.get("tube_count", 1)), MAX_TUBES))
     tubes = list(range(tube_count))
+
+    # Label printing is a launch-time choice, so it is expressed in the
+    # INITIAL STATE rather than in preconditions: Decap always requires
+    # ``printed``, and with the checkbox off every tube starts already
+    # ``printed``. The planner then never selects PrintLabel and Decap
+    # fires straight after Pick — one static precondition graph, one
+    # switch, no conditional actions.
+    print_label = bool(kwargs.get("print_label", False))
+    _CHAIN = _CHAIN_PRINT if print_label else _CHAIN_PLAIN
+    _STEPS = len(_CHAIN)
+    initial_facts = frozenset(
+        () if print_label else [(printed.name, t) for t in tubes]
+    )
 
     def item_done(state, tube):
         return (recapped.name, tube) in state
@@ -208,7 +239,7 @@ def setup(**kwargs):
     )
 
     return {
-        "initial_facts": frozenset(),
+        "initial_facts": initial_facts,
         "goal":          goal,
         "item_done":     item_done,
         "goal_facts":    goal_facts,
@@ -277,6 +308,48 @@ class Pick(Action):
         rt.step(_progress_pct(self), level="progress")
         rcp["falcon_rack"].pick(slot, soft_approach=True, motion_plan_kwargs=MOTION_PLAN_GRAVITY)
         return "picked"
+
+
+class PrintLabel(Action):
+    """Print + apply a barcode label on the held tube.
+
+    Only planned when the ``print_label`` launch kwarg is on — with it
+    off, setup() seeds ``printed`` for every tube so this action is never
+    selectable (see setup()).
+
+    place(exit=False) + print + pick(approach=False) stay ONE action, the
+    same rule as Decap/Cap: the tube must never be left sitting on the
+    applicator pad across a replan boundary. The action always ends with
+    the tube back in the gripper, which is also what makes the failure
+    path safe — on a bad print we return False with the physical state
+    exactly as the precondition found it, so the planner re-selects this
+    step and prints again (project-guide §8, declarative retry)."""
+    params   = ["tube"]
+    duration = 20
+    resource = "robot"
+    tool     = "gripper"
+
+    def pre(self, tube):
+        return picked(tube) & ~printed(tube)
+
+    def eff(self, tube):
+        return {"printed": (+printed(tube),)}
+
+    def execute(self, tube):
+        rt, rcp = self.ctx.runtime, self.ctx.recipes
+        slot = _slot(self, tube)
+        data = f"{LABEL_PREFIX}{slot}"
+        rt.step(f"tube {tube + 1} [{slot}]: print label {data}")
+        rt.step(_progress_pct(self), level="progress")
+        rcp["printer"].place(exit=False, gravity_offset=PRINTER_GRAV_OFFSET)
+        ok = rcp["printer"].print_label(data, code_type=LABEL_CODE)
+        # Retrieve the tube FIRST, then judge the print — never leave it
+        # on the pad, whatever the printer reported.
+        rcp["printer"].pick(approach=False)
+        if not ok:
+            rt.step(f"tube {tube + 1}: print failed — check the printer, then Resume")
+            return False
+        return "printed"
 
 
 class PlaceOnScale(Action):
@@ -436,8 +509,13 @@ class Decap(Action):
     tool     = "gripper"
 
     def pre(self, tube):
-        # Decap is now the FIRST thing after the pick.
-        return picked(tube) & decapper_free() & ~decapped(tube)
+        # Decap is the FIRST thing after the pick — except for the label,
+        # which is either printed by PrintLabel or seeded by setup() when
+        # the print_label kwarg is off. ``picked`` has to stay in its own
+        # right: when setup() seeds ``printed``, that fact carries no
+        # implication that the tube was ever picked up, and the planner
+        # will happily decap a tube still sitting in the rack.
+        return picked(tube) & printed(tube) & decapper_free() & ~decapped(tube)
 
     def eff(self, tube):
         # Tube into the decapper, cap onto the gripper: the hand stays
