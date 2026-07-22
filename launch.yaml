@@ -11,7 +11,7 @@ recipes:      recipes.j2
 actions:      actions.py
 checks:       checks.py
 
-plan_window:  20
+plan_window:  4
 scheduler:    cpsat
 
 kwargs:
