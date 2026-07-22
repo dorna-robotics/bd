@@ -22,7 +22,7 @@ pipettor:
 # resolves to rack_falcon_15ml_1.
 falcon_rack:
   class: workspace.recipes.rack.Rack
-  kwargs: {component: adapter_plate_falcon_15ml_1, left_approach: false, base_distance: 100, rail_step: 25, rail_span: 20, speed_factor: {{ sf }}, has_motion_plan: [true, cjmove]}
+  kwargs: {component: adapter_plate_falcon_15ml_1, left_approach: false, base_distance: 100, rail_step: 25, rail_span: 20, padding: 100, speed_factor: {{ sf }}, has_motion_plan: [true, cjmove]}
 
 # PipettingSite on the falcon adapter — immerse / aspirate / dispense /
 # retract into the rack's tubes. Printer params (base_distance=200).
@@ -44,12 +44,12 @@ waste_bin:
 # (printer params: base_distance 200).
 decapper:
   class: workspace.recipes.decapper.Decapper
-  kwargs: {component: decapper_1, base_distance: 50, rail_step: 25, rail_span: 20, padding: 40, speed_factor: {{ sf }}, has_motion_plan: [true, cjmove]}
+  kwargs: {component: decapper_1, base_distance: 50, rail_step: 25, rail_span: 20, padding: 100, speed_factor: {{ sf }}, has_motion_plan: [true, cjmove]}
 
 # Cap holder — Rack over its adapter; resolves to capholder_falcon_15ml_1.
 capholder:
   class: workspace.recipes.rack.Rack
-  kwargs: {component: adapter_capholder_falcon_15ml_1, left_approach: false, base_distance: 50, rail_step: 25, rail_span: 20, speed_factor: {{ sf }}, has_motion_plan: [true, cjmove]}
+  kwargs: {component: adapter_capholder_falcon_15ml_1, left_approach: false, base_distance: 50, rail_step: 25, rail_span: 20, padding: 100, speed_factor: {{ sf }}, has_motion_plan: [true, cjmove]}
 
 # Scale — weight() on the SPX222 (sim-agnostic canned reading by default).
 # base_distance 150 + rail 25x20: the plate_1/B4 placement needs the rail
@@ -64,7 +64,7 @@ scale:
 # handle's job above.
 scale_holder:
   class: workspace.recipes.recipe.Recipe
-  kwargs: {component: scaletop_falcon_15ml_1, target_anchor: place, base_distance: 50, rail_step: 25, rail_span: 20, padding: 40, speed_factor: {{ sf }}, has_motion_plan: [true, cjmove]}
+  kwargs: {component: scaletop_falcon_15ml_1, target_anchor: place, base_distance: 50, rail_step: 25, rail_span: 20, padding: 100, speed_factor: {{ sf }}, has_motion_plan: [true, cjmove]}
 
 # Camera — present the held tube to the vertical station + detect().
 # left_approach false: the station x (-164.7 in the rail frame) is past
