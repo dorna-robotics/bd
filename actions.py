@@ -83,14 +83,25 @@ recapped    = predicate("recapped")     # capped tube back in its slot (= done)
 parked     = predicate("parked")
 
 # ── Single-occupancy resources (capacity-1, no args) ──────────────────
-# Without these the planner batches steps across tubes that physically
-# can't overlap (one gripper, one scaletop seat, one decapper, one
-# pipettor nozzle). Each fact is consumed (-) when its slot fills and
-# restored (+) when it empties. See project-guide §8.
-hand_empty    = predicate("hand_empty")     # gripper holds nothing
-scale_free    = predicate("scale_free")     # scaletop seat is empty
-decapper_free = predicate("decapper_free")  # decapper holds no tube
-nozzle_free   = predicate("nozzle_free")    # pipettor carries no tip
+# One gripper, one scaletop seat, one decapper, one pipettor nozzle —
+# each fact is consumed (-) when its slot fills and restored (+) when
+# it empties. See project-guide §8.
+#
+# capacity=True: these facts are shared MUTUAL-EXCLUSION signals, not
+# causal ones — the same gripper toggles hand_empty across every
+# tube, not just one. Without the flag, the scheduler ties precedence
+# to whichever tube's action the plan's own linearization happened to
+# set the fact last, which welds every tube's chain into one serial
+# sequence the moment a tube revisits a tool twice (this project's
+# re-cap chain sends the gripper back for a second visit after the
+# pipettor phase) — batching collapses into full one-tube-at-a-time
+# execution. capacity=True keeps the fact's mutual exclusion (no two
+# tubes ever share the slot) while letting the scheduler interleave
+# tubes to cluster by tool again. See dsl.py's module docstring.
+hand_empty    = predicate("hand_empty", capacity=True)     # gripper holds nothing
+scale_free    = predicate("scale_free", capacity=True)     # scaletop seat is empty
+decapper_free = predicate("decapper_free", capacity=True)  # decapper holds no tube
+nozzle_free   = predicate("nozzle_free", capacity=True)    # pipettor carries no tip
 
 
 # Component names — slot lists are read from these at runtime.
