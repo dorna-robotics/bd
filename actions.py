@@ -48,8 +48,9 @@ re-selects the same read, and a ``critical`` device that is down has
 already paused the runtime until the operator fixes it and resumes.
 
 ``tube_count`` (launch kwarg, default 1) sets how many tubes to run.
-Tubes stay uncapped in the rack; caps stay on the cap holder, indexed by
-tube, so a future re-cap flow knows which cap belongs to which tube.
+Each tube ends back in its own rack slot with its OWN cap screwed back
+on: the cap holder is a temporary park indexed by tube, so step 17
+picks up exactly the cap step 8 put down.
 """
 
 from __future__ import annotations
@@ -152,12 +153,26 @@ def _tip(action, tube):
 
 def _progress_pct(action) -> int:
     """Monotonic % over all per-tube steps. This action's eff hasn't
-    applied yet, so count it as +1."""
+    applied yet, so count it as +1.
+
+    Counts how FAR each tube has got in the chain (its highest set
+    predicate), not how many chain facts it currently holds. The two
+    differ because ``cap_parked`` is CONSUMED by PickCap when the cap
+    leaves the holder: a plain fact count nets zero for that step
+    (cap_held added, cap_parked dropped), so the bar stalls for one
+    step and tops out at 95% instead of 100%.
+    """
     tubes = action._ctx_all_objects().get("tube", [])
     total = (len(tubes) or 1) * _STEPS
     ctx_state = getattr(action.ctx, "state", None) or {}
     facts = ctx_state.get("facts") or set()
-    done = sum(1 for t in tubes for p in _CHAIN if (p.name, t) in facts)
+    done = 0
+    for t in tubes:
+        reached = 0
+        for i, p in enumerate(_CHAIN):
+            if (p.name, t) in facts:
+                reached = i + 1
+        done += reached
     return int((done + 1) / total * 100)
 
 
