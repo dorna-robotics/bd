@@ -306,6 +306,13 @@ class Inspect(Action):
         rt.step(f"tube {tube + 1}: camera")
         rt.step(_progress_pct(self), level="progress")
         rcp["inspector"].present(approach=False, offset=PRESENT_OFFSET)
+        # Spin the tube on its own axis (j5) so the camera sees all
+        # four faces. Four 90-degree steps land ~90 apart (the wrap
+        # keeps j5 inside its limit, so the last lands at +10 rather
+        # than back at 0 — coverage is what matters here, not the
+        # absolute angle).
+        for _ in range(4):
+            rcp["inspector"].rotate(rotation=90)
         try:
             rcp["inspector"].detect()
         except CameraUnavailableError:
@@ -335,6 +342,10 @@ class Scan(Action):
         rt.step(f"tube {tube + 1}: barcode")
         rt.step(_progress_pct(self), level="progress")
         rcp["barcode_reader"].present(approach=False, offset=PRESENT_OFFSET)
+        # A label sits on ONE face of the tube — spin j5 through four
+        # 90-degree steps so every face passes the reader.
+        for _ in range(4):
+            rcp["barcode_reader"].rotate(rotation=90)
         scan = rcp["barcode_reader"].detect()
         if scan is None:
             rt.step(f"tube {tube + 1}: barcode reader unavailable — reconnect it, then Resume")
