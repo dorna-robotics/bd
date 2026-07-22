@@ -4,7 +4,7 @@
 #   - tool rack 144 (tube gripper) + tool rack 192 (pipettor) on plate 5
 #   - falcon rack on plate 4/D9, FULL: 20 capped tubes
 #   - tip rack (96 tips) on plate 4/C19, tip waste bin on plate 4/G19
-#   - decapper on plate 4/G5
+#   - decapper on plate 4/A7
 #   - falcon 15 cap holder on plate 4/E1 (empty — caps park here mid-flow)
 #   - OHAUS SPX222 scale on plate 1/D12 with a falcon holder (scaletop) on top
 #   - camera (inspection_vertical_144mm) on plate 1/B3
@@ -177,7 +177,7 @@ tip_waste_bin:
     child_anchor: "center"
     offset: [0, 0, 0, 0, 0, 0]
 
-# ── Decapper on plate 4/G5 ──────────────────────────────────────────
+# ── Decapper on plate 4/A7 ──────────────────────────────────────────
 decapper_1:
   type: "decapper"
   output_enable: [[3, 1, 0.1]]
@@ -185,9 +185,9 @@ decapper_1:
   attach:
     parent_name: "fixture_plate_4"
     parent_solid: "body"
-    parent_anchor: "A10"
+    parent_anchor: "A7"
     child_solid: "body"
-    child_anchor: "hole_1"
+    child_anchor: "hole_0"
     offset: [0, 0, 0, 0, 0, 0]
 
 # ── Falcon 15 cap holder on plate 4/E1 (empty) ──────────────────────
