@@ -5,58 +5,58 @@
 # (park(joint=...), motor). Same across every project.
 robot:
   class: workspace.recipes.recipe.Recipe
-  kwargs: {speed_factor: {{ sf }}}
+  kwargs: {speed_factor: {{ sf }}, has_motion_plan: [true, cjmove]}
 
 # Large tube gripper, parked in the 144 mm tool rack.
 gripper:
   class: workspace.recipes.tool_rack.ToolRack
-  kwargs: {component: tool_rack_144mm_1, left_approach: true, speed_factor: {{ sf }}, lmove_vaj: [600, 1400, 6000]}
+  kwargs: {component: tool_rack_144mm_1, left_approach: true, speed_factor: {{ sf }}, lmove_vaj: [600, 1400, 6000], has_motion_plan: [true, cjmove]}
 
 # Pipettor, parked in the 192 mm tool rack (actions mount it via
 # ``tool = "pipettor"``).
 pipettor:
   class: workspace.recipes.tool_rack.ToolRack
-  kwargs: {component: tool_rack_192mm_1, left_approach: true, speed_factor: {{ sf }}, lmove_vaj: [600, 1400, 6000]}
+  kwargs: {component: tool_rack_192mm_1, left_approach: true, speed_factor: {{ sf }}, lmove_vaj: [600, 1400, 6000], has_motion_plan: [true, cjmove]}
 
 # Falcon rack — Rack over the falcon adapter (gripper tube pick/place);
 # resolves to rack_falcon_15ml_1.
 falcon_rack:
   class: workspace.recipes.rack.Rack
-  kwargs: {component: adapter_plate_falcon_15ml_1, left_approach: false, base_distance: 100, rail_step: 25, rail_span: 20, speed_factor: {{ sf }}}
+  kwargs: {component: adapter_plate_falcon_15ml_1, left_approach: false, base_distance: 100, rail_step: 25, rail_span: 20, speed_factor: {{ sf }}, has_motion_plan: [true, cjmove]}
 
 # PipettingSite on the falcon adapter — immerse / aspirate / dispense /
 # retract into the rack's tubes. Printer params (base_distance=200).
 falcon_pipette:
   class: workspace.recipes.pipetting.PipettingSite
-  kwargs: {component: adapter_plate_falcon_15ml_1, base_distance: 200, speed_factor: {{ sf }}}
+  kwargs: {component: adapter_plate_falcon_15ml_1, base_distance: 200, speed_factor: {{ sf }}, has_motion_plan: [true, cjmove]}
 
 # Tip rack — pick_tip pulls a fresh tip onto the pipettor.
 tip_rack:
   class: workspace.recipes.pipetting.PipettingSite
-  kwargs: {component: adapter_sbs_0, base_distance: 250, speed_factor: {{ sf }}}
+  kwargs: {component: adapter_sbs_0, base_distance: 250, speed_factor: {{ sf }}, has_motion_plan: [true, cjmove]}
 
 # Waste bin — eject_tip drops the used tip here.
 waste_bin:
   class: workspace.recipes.pipetting.PipettingSite
-  kwargs: {component: adapter_sbs_1, base_distance: 250, speed_factor: {{ sf }}}
+  kwargs: {component: adapter_sbs_1, base_distance: 250, speed_factor: {{ sf }}, has_motion_plan: [true, cjmove]}
 
 # Decapper — cap(...) / decap(...) wrap the chunked screw motion
 # (printer params: base_distance 200).
 decapper:
   class: workspace.recipes.decapper.Decapper
-  kwargs: {component: decapper_1, base_distance: 50, rail_step: 25, rail_span: 20, padding: 40, speed_factor: {{ sf }}}
+  kwargs: {component: decapper_1, base_distance: 50, rail_step: 25, rail_span: 20, padding: 40, speed_factor: {{ sf }}, has_motion_plan: [true, cjmove]}
 
 # Cap holder — Rack over its adapter; resolves to capholder_falcon_15ml_1.
 capholder:
   class: workspace.recipes.rack.Rack
-  kwargs: {component: adapter_capholder_falcon_15ml_1, left_approach: false, base_distance: 50, rail_step: 25, rail_span: 20, speed_factor: {{ sf }}}
+  kwargs: {component: adapter_capholder_falcon_15ml_1, left_approach: false, base_distance: 50, rail_step: 25, rail_span: 20, speed_factor: {{ sf }}, has_motion_plan: [true, cjmove]}
 
 # Scale — weight() on the SPX222 (sim-agnostic canned reading by default).
 # base_distance 150 + rail 25x20: the plate_1/B4 placement needs the rail
 # sweep — the plate_6 params (350/20x5) find no reference joint there.
 scale:
   class: workspace.recipes.scale.Scale
-  kwargs: {component: scale_spx222_1, base_distance: 50, rail_step: 25, rail_span: 20, speed_factor: {{ sf }}}
+  kwargs: {component: scale_spx222_1, base_distance: 50, rail_step: 25, rail_span: 20, speed_factor: {{ sf }}, has_motion_plan: [true, cjmove]}
 
 # Falcon holder ON the scale — pick/place a tube onto its "place" anchor.
 # Base Recipe, not Scale: the scaletop is a passive holder with no device
@@ -64,7 +64,7 @@ scale:
 # handle's job above.
 scale_holder:
   class: workspace.recipes.recipe.Recipe
-  kwargs: {component: scaletop_falcon_15ml_1, target_anchor: place, base_distance: 50, rail_step: 25, rail_span: 20, padding: 40, speed_factor: {{ sf }}}
+  kwargs: {component: scaletop_falcon_15ml_1, target_anchor: place, base_distance: 50, rail_step: 25, rail_span: 20, padding: 40, speed_factor: {{ sf }}, has_motion_plan: [true, cjmove]}
 
 # Camera — present the held tube to the vertical station + detect().
 # left_approach false: the station x (-164.7 in the rail frame) is past
@@ -79,7 +79,7 @@ scale_holder:
 # >= ~200 fail present() once the tube TCP shortens the reach.
 inspector:
   class: workspace.recipes.inspector.FixedInspector
-  kwargs: {component: inspection_vertical_144mm_1, left_approach: false, base_distance: 150, rail_step: 25, rail_span: 3, detection_preset: {}, speed_factor: {{ sf }}}
+  kwargs: {component: inspection_vertical_144mm_1, left_approach: false, base_distance: 150, rail_step: 25, rail_span: 3, detection_preset: {}, speed_factor: {{ sf }}, has_motion_plan: [true, cjmove]}
 
 # Barcode reader — present() faces the held tube at the reader; detect()
 # reads sim-agnostically (canned in sim, real DS457 otherwise).
@@ -88,4 +88,4 @@ inspector:
 # inspector note above.
 barcode_reader:
   class: workspace.recipes.barcode_reader.BarcodeReader
-  kwargs: {component: barcode_reader_1, left_approach: false, base_distance: 150, rail_step: 25, rail_span: 3, speed_factor: {{ sf }}}
+  kwargs: {component: barcode_reader_1, left_approach: false, base_distance: 150, rail_step: 25, rail_span: 3, speed_factor: {{ sf }}, has_motion_plan: [true, cjmove]}
