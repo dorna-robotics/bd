@@ -7,32 +7,40 @@ asserted). If a step fails, the leaf fails THERE — the planner replans
 from observed state and re-selects exactly the step that didn't happen
 (pattern: the apc project / examples/scale).
 
-  Tube gripper (tool = "gripper"):
+Order (customer-specified): decap first, then pipette, then re-cap,
+and only then weigh / inspect / scan — so every measurement is taken
+on the FINISHED tube.
+
+  Tube gripper (tool = "gripper") — open the tube:
     1. Pick           pick the tube from the falcon rack
-    2. PlaceOnScale   release it on the scaletop
-    3. Weigh          read the settled weight — NO motion, a pure device
-                      read (declarative retry, see below)
-    4. PickFromScale  re-grip the tube off the scaletop
-    5. Inspect        present to the camera + detect
-    6. Scan           present to the barcode reader + read the code
-    7. Decap          place in the decapper + unscrew (cap → gripper)
-    8. ParkCap        park the cap at index t on the cap holder
-    9. RetrieveTube   pick the (open) tube back out of the decapper
-   10. Return         return it to its rack slot
+    2. Decap          place in the decapper + unscrew (cap → gripper)
+    3. ParkCap        park the cap at index t on the cap holder
+    4. RetrieveTube   pick the (open) tube back out of the decapper
+    5. Return         return it to its rack slot, open, ready to dose
 
   Pipettor (tool = "pipettor", swap handled by the planner):
-   11. PickTip        fresh tip t from the tip rack
-   12. Aspirate       draw the dose from the D5 reservoir (one physical
+    6. PickTip        fresh tip t from the tip rack
+    7. Aspirate       draw the dose from the D5 reservoir (one physical
                       unit: immerse → aspirate → retract)
-   13. Dispense       immerse → dispense → retract into tube t
-   14. EjectTip       drop the used tip into the waste bin
+    8. Dispense       immerse → dispense → retract into tube t
+    9. EjectTip       drop the used tip into the waste bin
 
   Tube gripper again — re-cap (the printer project is the reference for
   the cap(exit=False) + pick(approach=False) pair):
-   15. PickForCap     pick the (open, dosed) tube off the rack
-   16. PlaceInDecapper seat it in the decapper
-   17. PickCap        pick its own cap back off the cap holder
-   18. Cap            screw the cap on + lift the capped tube out
+   10. PickForCap     pick the (open, dosed) tube off the rack
+   11. PlaceInDecapper seat it in the decapper
+   12. PickCap        pick its own cap back off the cap holder
+   13. Cap            screw the cap on + lift the capped tube out —
+                      the capped tube stays IN THE GRIPPER, which is
+                      why the measurements below need no extra pick
+
+  Measure the finished tube (still tool = "gripper"):
+   14. PlaceOnScale   release it on the scaletop
+   15. Weigh          read the settled weight — NO motion, a pure device
+                      read (declarative retry, see below)
+   16. PickFromScale  re-grip the tube off the scaletop
+   17. Inspect        present to the camera + detect
+   18. Scan           present to the barcode reader + read the code
    19. ReturnCapped   return the capped tube to its rack slot
 
 Slot D5 of the falcon rack is the RESERVOIR: an open (uncapped) tube the
@@ -133,10 +141,12 @@ PRESENT_OFFSET = [0, 0, -50, 0, 0, 0]
 
 _STEPS = 19            # per-tube steps for progress
 
-_CHAIN = (picked, on_scale, weighed, off_scale, inspected, scanned,
-          decapped, cap_parked, retrieved, returned, tipped, aspirated,
-          dispensed, ejected, recap_held, in_decapper, cap_held, capped,
-          recapped)
+# Execution order — _progress_pct counts each tube's FURTHEST entry,
+# so this tuple must stay in the order the actions actually run.
+_CHAIN = (picked, decapped, cap_parked, retrieved, returned,
+          tipped, aspirated, dispensed, ejected,
+          recap_held, in_decapper, cap_held, capped,
+          on_scale, weighed, off_scale, inspected, scanned, recapped)
 
 
 def _slot(action, tube):
@@ -277,7 +287,10 @@ class PlaceOnScale(Action):
     tool     = "gripper"
 
     def pre(self, tube):
-        return picked(tube) & scale_free() & ~on_scale(tube)
+        # After Cap: the capped tube is already in the gripper, so the
+        # weigh/inspect/scan block runs on the FINISHED tube with no
+        # extra pick.
+        return capped(tube) & scale_free() & ~on_scale(tube)
 
     def eff(self, tube):
         return {"on_scale": (+on_scale(tube), +hand_empty(), -scale_free())}
@@ -423,7 +436,8 @@ class Decap(Action):
     tool     = "gripper"
 
     def pre(self, tube):
-        return scanned(tube) & decapper_free() & ~decapped(tube)
+        # Decap is now the FIRST thing after the pick.
+        return picked(tube) & decapper_free() & ~decapped(tube)
 
     def eff(self, tube):
         # Tube into the decapper, cap onto the gripper: the hand stays
@@ -724,7 +738,9 @@ class ReturnCapped(Action):
     tool     = "gripper"
 
     def pre(self, tube):
-        return capped(tube) & ~recapped(tube)
+        # Last step: the capped tube has been weighed, inspected and
+        # scanned, and is still in the gripper.
+        return scanned(tube) & ~recapped(tube)
 
     def eff(self, tube):
         return {"recapped": (+recapped(tube), +hand_empty())}
