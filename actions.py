@@ -143,6 +143,12 @@ MAX_TUBES     = 19
 # Motion parameters
 GRAV_OFFSET   = 4      # mm — gravity press applied on every release
 SCALE_GRAV_OFFSET = GRAV_OFFSET + 5   # mm — extra press to seat the tube on the scaletop
+# TCP over-drive on the two rigid-jaw picks. The decapper pick is a jaw
+# grip on a screwed-on cap, so Decapper.pick sets compliant=False and the
+# over-drive folds into the attach offset — the tube really does sit
+# lower on the tool (the printer project used the same -1).
+DECAPPER_TCP_Z_OFFSET  = -1   # mm — bite lower lifting a tube out of the decapper
+CAPHOLDER_TCP_Z_OFFSET = 1    # mm — bite higher on a cap parked in the holder
 # Planner gravity constraint for planned travel hops while carrying:
 # keep the payload within 45 deg of upright. The platform falls back
 # to an unconstrained (still collision-checked) plan if unsatisfiable.
@@ -570,7 +576,7 @@ class RetrieveTube(Action):
         rt, rcp = self.ctx.runtime, self.ctx.recipes
         rt.step(f"tube {tube + 1}: pick from decapper")
         rt.step(_progress_pct(self), level="progress")
-        rcp["decapper"].pick()
+        rcp["decapper"].pick(tool_tcp_z_offset=DECAPPER_TCP_Z_OFFSET)
         return "retrieved"
 
 
@@ -775,7 +781,9 @@ class PickCap(Action):
         cap_slot = _cap_slot(self, tube)
         rt.step(f"tube {tube + 1}: cap from holder [{cap_slot}]")
         rt.step(_progress_pct(self), level="progress")
-        rcp["capholder"].pick(cap_slot, soft_approach=True, motion_plan_kwargs=MOTION_PLAN_GRAVITY)
+        rcp["capholder"].pick(cap_slot, soft_approach=True,
+                              tool_tcp_z_offset=CAPHOLDER_TCP_Z_OFFSET,
+                              motion_plan_kwargs=MOTION_PLAN_GRAVITY)
         return "cap_held"
 
 
@@ -804,7 +812,7 @@ class Cap(Action):
         rt.step(f"tube {tube + 1}: cap")
         rt.step(_progress_pct(self), level="progress")
         rcp["decapper"].cap(exit=False)
-        rcp["decapper"].pick(approach=False)
+        rcp["decapper"].pick(approach=False, tool_tcp_z_offset=DECAPPER_TCP_Z_OFFSET)
         return "capped"
 
 
