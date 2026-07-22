@@ -229,7 +229,7 @@ class PlaceOnScale(Action):
         rt, rcp = self.ctx.runtime, self.ctx.recipes
         rt.step(f"tube {tube + 1}: place on scale")
         rt.step(_progress_pct(self), level="progress")
-        rcp["scale_holder"].place("place", gravity_offset=SCALE_GRAV_OFFSET, soft_approach=False)
+        rcp["scale_holder"].place("place", gravity_offset=SCALE_GRAV_OFFSET, soft_approach=True)
         return "on_scale"
 
 
@@ -432,7 +432,7 @@ class Return(Action):
         slot = _slot(self, tube)
         rt.step(f"tube {tube + 1}: return to rack [{slot}]")
         rt.step(_progress_pct(self), level="progress")
-        rcp["falcon_rack"].place(slot, gravity_offset=GRAV_OFFSET, soft_approach=False, motion_plan_kwargs=MOTION_PLAN_GRAVITY)
+        rcp["falcon_rack"].place(slot, gravity_offset=GRAV_OFFSET, soft_approach=True, motion_plan_kwargs=MOTION_PLAN_GRAVITY)
         return "returned"
 
 
