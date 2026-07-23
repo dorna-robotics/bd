@@ -142,6 +142,12 @@ IMMERSE_DEPTH = 20     # mm below the tube top
 # a_pad (padding=50 above contact) straight in, S-curve decelerating to
 # zero at the target. ``gap`` is not read at all in this mode.
 IMMERSE_SOFT_APPROACH = False
+# With soft_approach off there is no gap point, so ``padding`` alone sets
+# where the dive begins: a_pad = max(height_load, height_container) +
+# padding, above the contact pose. 80 puts it ~68 mm over the tube rim
+# (PipettingSite.immerse's signature hardcodes 50, which also means a
+# padding: in recipes.j2 is shadowed and would do nothing).
+IMMERSE_PADDING = 80   # mm above contact where the descent starts
 VOL_UL        = 400    # microliters aspirated from D5 → dispensed per tube
 # Reservoir: the rack slot holding the OPEN (uncapped) source tube every
 # dose is drawn from. The rack's slot list is row-major (A1..A5, B1..B5,
@@ -660,7 +666,8 @@ class Aspirate(Action):
         rt.step(f"tube {tube + 1}: aspirate {VOL_UL} µL from [{SOURCE_SLOT}]")
         rt.step(_progress_pct(self), level="progress")
         rcp["falcon_pipette"].immerse(anchor=SOURCE_SLOT, depth=IMMERSE_DEPTH,
-                                        soft_approach=IMMERSE_SOFT_APPROACH)
+                                        soft_approach=IMMERSE_SOFT_APPROACH,
+                                        padding=IMMERSE_PADDING)
         # TEMPORARY (blind mode): pump outcome deliberately ignored while
         # the comms are being sorted out — aspirate, retract, assume success.
         rcp["falcon_pipette"].aspirate(vol=VOL_UL)
@@ -691,7 +698,8 @@ class Dispense(Action):
         rt.step(f"tube {tube + 1} [{slot}]: dispense {VOL_UL} µL")
         rt.step(_progress_pct(self), level="progress")
         rcp["falcon_pipette"].immerse(anchor=slot, depth=IMMERSE_DEPTH,
-                                        soft_approach=IMMERSE_SOFT_APPROACH)
+                                        soft_approach=IMMERSE_SOFT_APPROACH,
+                                        padding=IMMERSE_PADDING)
         # TEMPORARY (blind mode): pump outcome deliberately ignored while
         # the comms are being sorted out — dispense, retract, assume success.
         rcp["falcon_pipette"].dispense(vol=VOL_UL)
