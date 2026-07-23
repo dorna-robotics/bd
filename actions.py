@@ -132,15 +132,16 @@ PRINTER_GRAV_OFFSET = 4    # mm — press onto the applicator pad
 
 # Pipetting parameters
 IMMERSE_DEPTH = 20     # mm below the tube top
-# Hover height before the slow descent into a tube. It is ``gap`` that
-# sets this, NOT ``padding``: pick_setting builds the approach as
-# [[a_pad, a_gap], [contact]], and a_pad -> a_gap is one continuous
-# group, so the robot flies through the padding height and only starts
-# the slow leg at a_gap = height_load + height_tool + gap. Net clearance
-# over the tube rim is about (gap - 0.3) mm, so the default gap=2 left
-# only 1.7 mm. Must stay under (padding - height_tool) ~= 38 or a_gap
-# rises above the corridor entry.
-IMMERSE_GAP   = 10     # mm — ~10 mm of rim clearance before descending
+# soft_approach=False on the two immerse calls. With it True, touch()
+# stops DEAD at the gap point and runs the last leg as its own slow
+# lmove ("the deliberate slow insertion IS the feature" — recipe.py's
+# stop rule). That halt sat 1.7 mm over the rim at the default gap=2, so
+# nobody saw it; raising gap to get real clearance just lifted the same
+# halt into open air and the arm visibly froze in midair before creeping
+# down. False drops the gap point entirely: one continuous descent from
+# a_pad (padding=50 above contact) straight in, S-curve decelerating to
+# zero at the target. ``gap`` is not read at all in this mode.
+IMMERSE_SOFT_APPROACH = False
 VOL_UL        = 400    # microliters aspirated from D5 → dispensed per tube
 # Reservoir: the rack slot holding the OPEN (uncapped) source tube every
 # dose is drawn from. The rack's slot list is row-major (A1..A5, B1..B5,
@@ -658,7 +659,8 @@ class Aspirate(Action):
         rt, rcp = self.ctx.runtime, self.ctx.recipes
         rt.step(f"tube {tube + 1}: aspirate {VOL_UL} µL from [{SOURCE_SLOT}]")
         rt.step(_progress_pct(self), level="progress")
-        rcp["falcon_pipette"].immerse(anchor=SOURCE_SLOT, depth=IMMERSE_DEPTH, gap=IMMERSE_GAP)
+        rcp["falcon_pipette"].immerse(anchor=SOURCE_SLOT, depth=IMMERSE_DEPTH,
+                                        soft_approach=IMMERSE_SOFT_APPROACH)
         # TEMPORARY (blind mode): pump outcome deliberately ignored while
         # the comms are being sorted out — aspirate, retract, assume success.
         rcp["falcon_pipette"].aspirate(vol=VOL_UL)
@@ -688,7 +690,8 @@ class Dispense(Action):
         slot = _slot(self, tube)
         rt.step(f"tube {tube + 1} [{slot}]: dispense {VOL_UL} µL")
         rt.step(_progress_pct(self), level="progress")
-        rcp["falcon_pipette"].immerse(anchor=slot, depth=IMMERSE_DEPTH, gap=IMMERSE_GAP)
+        rcp["falcon_pipette"].immerse(anchor=slot, depth=IMMERSE_DEPTH,
+                                        soft_approach=IMMERSE_SOFT_APPROACH)
         # TEMPORARY (blind mode): pump outcome deliberately ignored while
         # the comms are being sorted out — dispense, retract, assume success.
         rcp["falcon_pipette"].dispense(vol=VOL_UL)
