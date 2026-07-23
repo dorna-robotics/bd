@@ -22,13 +22,13 @@ pipettor:
 # resolves to rack_falcon_15ml_1.
 falcon_rack:
   class: workspace.recipes.rack.Rack
-  kwargs: {component: adapter_plate_falcon_15ml_1, left_approach: false, base_distance: 100, rail_step: 25, rail_span: 20, padding: 100, speed_factor: {{ sf }}, has_motion_plan: [true, clmove]}
+  kwargs: {component: adapter_plate_falcon_15ml_1, left_approach: false, base_distance: 100, rail_step: 25, rail_span: 20, padding: 100, speed_factor: {{ sf }}, has_motion_plan: [true, clmove], lmove_vaj: [120, 400, 2000]}
 
 # PipettingSite on the falcon adapter — immerse / aspirate / dispense /
 # retract into the rack's tubes. Printer params (base_distance=200).
 falcon_pipette:
   class: workspace.recipes.pipetting.PipettingSite
-  kwargs: {component: adapter_plate_falcon_15ml_1, base_distance: 200, speed_factor: {{ sf }}, has_motion_plan: [true, clmove]}
+  kwargs: {component: adapter_plate_falcon_15ml_1, base_distance: 200, speed_factor: {{ sf }}, has_motion_plan: [true, clmove], lmove_vaj: [120, 400, 2000]}
 
 # Tip rack — pick_tip pulls a fresh tip onto the pipettor.
 tip_rack:
