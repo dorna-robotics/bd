@@ -99,11 +99,9 @@ tube_falcon_{{ r }}{{ c }}:
   # anchor="cap_seat", offset 0, gravity_offset 0, so there is no
   # per-call override. Lower = engages the thread lower.
   # All deep-merged over DEFAULTS.
-  # anchors:
-  #   body:
-  #     top: [0, 0, 119.1, 0, 0, 0]
-  #     place: [0, 0, 110.6, 0, 0, 0]
-  #     cap_seat: [0, 0, 115, 0, 0, 0]
+  anchors:
+    body:
+      cap_seat: [0, 0, 114.2, 0, 0, 0] 
   attach:
     parent_name: "rack_falcon_15ml_1"
     parent_solid: "body"
@@ -117,7 +115,7 @@ tube_falcon_{{ r }}{{ c }}:
 {% if not (r == "D" and c == 5) %}
 cap_falcon_{{ r }}{{ c }}:
   type: "cap_falcon_15ml"
-  twist: 950
+  #twist: 950
   attach:
     parent_name: "tube_falcon_{{ r }}{{ c }}"
     parent_solid: "body"

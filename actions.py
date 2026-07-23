@@ -141,7 +141,7 @@ IMMERSE_DEPTH = 20     # mm below the tube top
 # down. False drops the gap point entirely: one continuous descent from
 # a_pad (padding=50 above contact) straight in, S-curve decelerating to
 # zero at the target. ``gap`` is not read at all in this mode.
-IMMERSE_SOFT_APPROACH = False
+IMMERSE_SOFT_APPROACH = True
 # With soft_approach off there is no gap point, so ``padding`` alone sets
 # where the dive begins: a_pad = max(height_load, height_container) +
 # padding, above the contact pose. 80 puts it ~68 mm over the tube rim
