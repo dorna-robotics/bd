@@ -28,7 +28,7 @@ falcon_rack:
 # retract into the rack's tubes. Printer params (base_distance=200).
 falcon_pipette:
   class: workspace.recipes.pipetting.PipettingSite
-  kwargs: {component: adapter_plate_falcon_15ml_1, base_distance: 200, speed_factor: {{ sf }}, has_motion_plan: [true, clmove], lmove_vaj: [120, 400, 2000]}
+  kwargs: {component: adapter_plate_falcon_15ml_1, base_distance: 200, speed_factor: {{ sf }}, has_motion_plan: [False, jmove]}
 
 # Tip rack — pick_tip pulls a fresh tip onto the pipettor.
 tip_rack:
