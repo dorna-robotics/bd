@@ -1,4 +1,4 @@
-{%- set sf = 1 -%}
+{%- set sf = 1.5 -%}
 
 # Robot (generic): base Recipe with NO component. Owns no station, does no
 # boot-time IK — the stable handle for robot-level Start/Park calls
@@ -16,7 +16,7 @@ gripper:
 # ``tool = "pipettor"``).
 pipettor:
   class: workspace.recipes.tool_rack.ToolRack
-  kwargs: {component: tool_rack_192mm_1, left_approach: true, speed_factor: {{ sf }}, lmove_vaj: [600, 1400, 6000], has_motion_plan: [true, clmove]}
+  kwargs: {component: tool_rack_192mm_1,   left_approach: true, speed_factor: {{ sf }}, lmove_vaj: [600, 1400, 6000], has_motion_plan: [true, clmove]}
 
 # Falcon rack — Rack over the falcon adapter (gripper tube pick/place);
 # resolves to rack_falcon_15ml_1.
