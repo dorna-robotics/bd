@@ -407,8 +407,15 @@ class Weigh(Action):
     this action (examples/scale is the reference for this pattern)."""
     params   = ["tube"]
     duration = 3
-    resource = "robot"
-    tool     = "gripper"
+    # "scale", not "robot": during the read the tube sits on the pan and
+    # the hand is empty (PlaceOnScale restored hand_empty), so the arm is
+    # genuinely free — holding the robot lock serialized 3 s of pure
+    # device wait into the arm's schedule. No ``tool`` either: a pure
+    # read is transparent to tool sequencing (a declared tool would
+    # force a gripper mount just to wait on a balance). Mirrors
+    # examples/scale. Hardware caveat lives there too: an arm moving on
+    # the shared bench can slow the balance's settle.
+    resource = "scale"
 
     def pre(self, tube):
         return on_scale(tube) & ~weighed(tube)

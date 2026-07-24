@@ -10,19 +10,19 @@ robot:
 # Large tube gripper, parked in the 144 mm tool rack.
 gripper:
   class: workspace.recipes.tool_rack.ToolRack
-  kwargs: {component: tool_rack_144mm_1, left_approach: true, speed_factor: {{ sf }}, lmove_vaj: [600, 1400, 6000], has_motion_plan: [true, clmove]}
+  kwargs: {component: tool_rack_144mm_1, left_approach: true, speed_factor: {{ sf }}, has_motion_plan: [true, clmove]}
 
 # Pipettor, parked in the 192 mm tool rack (actions mount it via
 # ``tool = "pipettor"``).
 pipettor:
   class: workspace.recipes.tool_rack.ToolRack
-  kwargs: {component: tool_rack_192mm_1,   left_approach: true, speed_factor: {{ sf }}, lmove_vaj: [600, 1400, 6000], has_motion_plan: [true, clmove]}
+  kwargs: {component: tool_rack_192mm_1, left_approach: true, speed_factor: {{ sf }}, has_motion_plan: [true, clmove]}
 
 # Falcon rack — Rack over the falcon adapter (gripper tube pick/place);
 # resolves to rack_falcon_15ml_1.
 falcon_rack:
   class: workspace.recipes.rack.Rack
-  kwargs: {component: adapter_plate_falcon_15ml_1, left_approach: false, base_distance: 100, rail_step: 25, rail_span: 20, padding: 100, speed_factor: {{ sf }}, has_motion_plan: [true, clmove], lmove_vaj: [120, 400, 2000]}
+  kwargs: {component: adapter_plate_falcon_15ml_1, left_approach: false, base_distance: 100, rail_step: 25, rail_span: 20, padding: 100, speed_factor: {{ sf }}, has_motion_plan: [true, clmove]}
 
 # PipettingSite on the falcon adapter — immerse / aspirate / dispense /
 # retract into the rack's tubes. Printer params (base_distance=200).
