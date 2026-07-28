@@ -84,7 +84,7 @@ printer:
 # Wider spans let the solver park under the station again; standoffs
 # >= ~200 fail present() once the tube TCP shortens the reach.
 inspector:
-  class: workspace.recipes.inspector.FixedInspector
+  class: workspace.recipes.inspector.Inspector
   kwargs: {component: inspection_vertical_144mm_1, left_approach: false, base_distance: 150, rail_step: 25, rail_span: 3, detection_preset: {}, speed_factor: {{ sf }}, has_motion_plan: [true, clmove]}
 
 # Barcode reader — present() faces the held tube at the reader; detect()
