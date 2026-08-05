@@ -3,6 +3,12 @@
 # Split out of launch.yaml the same way recipes.j2 is: launch.yaml
 # points here (``kwargs: hmi/kwargs.j2``), this file owns the schema.
 # The top level IS the schema — one entry per field.
+#
+# _layout is a hint, not a field: rows of fields rendered side by side
+# (rack left, run options right). Anything unlisted stacks below.
+
+_layout:
+  - row: [tubes, print_label]
 
 tubes:
   type: slots
