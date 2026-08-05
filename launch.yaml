@@ -18,7 +18,8 @@ kwargs:
     type: slots
     component: rack_falcon_15ml_1
     exclude: ["D5"]
-    exclude_hint: "D5 is the reservoir every dose is drawn from"
+    exclude_hint: "Reservoir (D5) — never processed"
+    exclude_label: "SOURCE"
     default: ["A1"]
     label: Tubes to process
     hint: Tap the rack positions you loaded. Each selected tube runs the full chain.
