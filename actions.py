@@ -1,4 +1,4 @@
-"""bd protocol — Start → [per-tube split chain] ×tube_count → Park.
+"""bd protocol — Start → [per-tube split chain] × selected tubes → Park.
 
 Each tube t (rack slot, cap-holder slot and tip slot all share index t)
 moves through a SPLIT chain of small BT actions, one recipe unit per
@@ -49,8 +49,8 @@ on the FINISHED tube.
 
 Slot D5 of the falcon rack is the RESERVOIR: an open (uncapped) tube the
 pipettor aspirates every dose from. It is never picked, weighed, decapped
-or re-capped — ``tube_count`` is clamped so the processed tubes never
-reach it (see ``MAX_TUBES``).
+or re-capped — the reservoir slot is filtered out of the operator's
+selection so the processed tubes never reach it (see ``MAX_TUBES``).
 
 Device reads + declarative retry (project-guide §8): ``Weigh`` / ``Scan``
 assert their fact ONLY on a valid reading and ``return False`` otherwise
@@ -59,7 +59,8 @@ loop anywhere — a False leaf replans from observed state, the planner
 re-selects the same read, and a ``critical`` device that is down has
 already paused the runtime until the operator fixes it and resumes.
 
-``tube_count`` (launch kwarg, default 1) sets how many tubes to run.
+``tubes`` (launch kwarg, a list of rack slot names picked on the run-setup
+grid) sets WHICH positions run; the reservoir slot is never processed.
 Each tube ends back in its own rack slot with its OWN cap screwed back
 on: the cap holder is a temporary park indexed by tube, so step 17
 picks up exactly the cap step 8 put down.
@@ -227,10 +228,17 @@ def _progress_pct(action) -> int:
 def setup(**kwargs):
     global _CHAIN, _STEPS
 
-    # Clamp: slot D5 is the reservoir, so it must never be handed out as
-    # a processed tube (see SOURCE_SLOT).
-    tube_count = max(0, min(int(kwargs.get("tube_count", 1)), MAX_TUBES))
-    tubes = list(range(tube_count))
+    # The operator picks WHICH rack positions to run (``tubes`` kwarg,
+    # a list of slot names from the run-setup grid). Everything
+    # downstream keys on the tube INDEX — the rack's row-major slot
+    # order — so the only job here is names → indices, with the
+    # reservoir slot excluded no matter what arrives.
+    slots = [f"{r}{c}" for r in "ABCD" for c in range(1, 6)]
+    picked = kwargs.get("tubes") or []
+    if isinstance(picked, str):                 # tolerate "A1,A2" text
+        picked = [s.strip() for s in picked.split(",") if s.strip()]
+    tubes = sorted({slots.index(s) for s in picked
+                    if s in slots and s != SOURCE_SLOT})[:MAX_TUBES]
 
     # Label printing is a launch-time choice, so it is expressed in the
     # INITIAL STATE rather than in preconditions: Decap always requires

@@ -14,13 +14,14 @@ plan_window:  4
 scheduler:    cpsat
 
 kwargs:
-  tube_count:
-    type: int
-    default: 1
+  tubes:
+    type: slots
+    component: rack_falcon_15ml_1
+    exclude: ["D5"]
+    exclude_hint: "D5 is the reservoir every dose is drawn from"
+    default: ["A1"]
     label: Tubes to process
-    hint: How many tubes to run. D5 is the reservoir, so 19 slots are available.
-    min: 1
-    max: 19
+    hint: Tap the rack positions you loaded. Each selected tube runs the full chain.
   print_label:
     type: bool
     default: false
