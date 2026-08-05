@@ -13,4 +13,4 @@ checks:       checks.py
 plan_window:  4
 scheduler:    cpsat
 
-kwargs:       kwargs.j2
+kwargs:       hmi/kwargs.j2
