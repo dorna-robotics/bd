@@ -351,6 +351,7 @@ class Pick(Action):
         rt, rcp = self.ctx.runtime, self.ctx.recipes
         slot = _slot(self, tube)
         rt.step(f"tube {tube + 1} [{slot}]: pick")
+        rt.op(state=f"Picking tube {tube + 1}", tube=f"{tube + 1} [{slot}]")
         rt.step(_progress_pct(self), level="progress")
         rcp["falcon_rack"].pick(slot, soft_approach=True, motion_plan_kwargs=MOTION_PLAN_GRAVITY)
         return "picked"
@@ -386,6 +387,7 @@ class PrintLabel(Action):
         slot = _slot(self, tube)
         data = f"{LABEL_PREFIX}{slot}"
         rt.step(f"tube {tube + 1} [{slot}]: print label {data}")
+        rt.op(state=f"Labelling tube {tube + 1}")
         rt.step(_progress_pct(self), level="progress")
         rcp["printer"].place(exit=False, gravity_offset=PRINTER_GRAV_OFFSET)
         ok = rcp["printer"].print_label(data, code_type=LABEL_CODE)
@@ -417,6 +419,7 @@ class PlaceOnScale(Action):
     def execute(self, tube):
         rt, rcp = self.ctx.runtime, self.ctx.recipes
         rt.step(f"tube {tube + 1}: place on scale")
+        rt.op(state=f"Weighing tube {tube + 1}")
         rt.step(_progress_pct(self), level="progress")
         rcp["scale_holder"].place("place", gravity_offset=SCALE_GRAV_OFFSET, soft_approach=True)
         return "on_scale"
@@ -455,6 +458,7 @@ class Weigh(Action):
             rt.step(f"tube {tube + 1}: scale unavailable — reconnect it, then Resume")
             return False
         rt.step(f"tube {tube + 1}: weight {grams} g")
+        rt.op(weight=grams)
         return "weighed"
 
 
@@ -500,6 +504,7 @@ class Inspect(Action):
     def execute(self, tube):
         rt, rcp = self.ctx.runtime, self.ctx.recipes
         rt.step(f"tube {tube + 1}: camera")
+        rt.op(state=f"Inspecting tube {tube + 1}")
         rt.step(_progress_pct(self), level="progress")
         rcp["inspector"].present(approach=False, offset=PRESENT_OFFSET)
         # Spin the tube on its own axis (j5) so the camera sees all
@@ -536,6 +541,7 @@ class Scan(Action):
     def execute(self, tube):
         rt, rcp = self.ctx.runtime, self.ctx.recipes
         rt.step(f"tube {tube + 1}: barcode")
+        rt.op(state=f"Scanning tube {tube + 1}")
         rt.step(_progress_pct(self), level="progress")
         rcp["barcode_reader"].present(approach=False, offset=PRESENT_OFFSET)
         # A label sits on ONE face of the tube — spin j5 through four
@@ -578,6 +584,7 @@ class Decap(Action):
     def execute(self, tube):
         rt, rcp = self.ctx.runtime, self.ctx.recipes
         rt.step(f"tube {tube + 1}: decap")
+        rt.op(state=f"Opening tube {tube + 1}")
         rt.step(_progress_pct(self), level="progress")
         rcp["decapper"].place(exit=False)
         rcp["decapper"].decap(approach=False)
@@ -644,6 +651,7 @@ class Return(Action):
         rt, rcp = self.ctx.runtime, self.ctx.recipes
         slot = _slot(self, tube)
         rt.step(f"tube {tube + 1}: return to rack [{slot}]")
+        rt.op(state=f"Returning tube {tube + 1}")
         rt.step(_progress_pct(self), level="progress")
         rcp["falcon_rack"].place(slot, gravity_offset=GRAV_OFFSET, soft_approach=True, motion_plan_kwargs=MOTION_PLAN_GRAVITY)
         return "returned"
@@ -668,6 +676,7 @@ class PickTip(Action):
         rt, rcp = self.ctx.runtime, self.ctx.recipes
         tip = _tip(self, tube)
         rt.step(f"tube {tube + 1}: tip [{tip}]")
+        rt.op(state=f"Fitting a tip for tube {tube + 1}")
         rt.step(_progress_pct(self), level="progress")
         # TEMPORARY (blind mode): outcome deliberately ignored while the
         # pump comms are being sorted out — do the motion, assume success.
@@ -695,6 +704,7 @@ class Aspirate(Action):
     def execute(self, tube):
         rt, rcp = self.ctx.runtime, self.ctx.recipes
         rt.step(f"tube {tube + 1}: aspirate {_vol(tube)} µL from [{SOURCE_SLOT}]")
+        rt.op(state=f"Drawing dose for tube {tube + 1}", dose=round(_vol(tube) / 1000, 3))
         rt.step(_progress_pct(self), level="progress")
         rcp["falcon_pipette"].immerse(anchor=SOURCE_SLOT, depth=IMMERSE_DEPTH,
                                         soft_approach=IMMERSE_SOFT_APPROACH,
@@ -727,6 +737,7 @@ class Dispense(Action):
         rt, rcp = self.ctx.runtime, self.ctx.recipes
         slot = _slot(self, tube)
         rt.step(f"tube {tube + 1} [{slot}]: dispense {_vol(tube)} µL")
+        rt.op(state=f"Dosing tube {tube + 1}")
         rt.step(_progress_pct(self), level="progress")
         rcp["falcon_pipette"].immerse(anchor=slot, depth=IMMERSE_DEPTH,
                                         soft_approach=IMMERSE_SOFT_APPROACH,

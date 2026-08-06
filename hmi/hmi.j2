@@ -1,0 +1,24 @@
+# bd — pendant HMI. The project DECLARES widgets; the platform renders
+# them. Widgets bind to values published with rt.op() in actions.py.
+#
+# Catalog (platform-owned): state · stat · progress
+
+hmi:
+  - widget: state
+    bind: state
+
+  - widget: progress
+
+  - widget: stat
+    bind: tube
+    label: Tube
+
+  - widget: stat
+    bind: weight
+    label: Last weight
+    unit: g
+
+  - widget: stat
+    bind: dose
+    label: Dose
+    unit: mL
