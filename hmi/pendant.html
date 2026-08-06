@@ -1,0 +1,45 @@
+<!-- bd — the project's pendant screen.
+     The platform hosts this in a shadow root and fills the bindings
+     from rt.op; nothing here lives in the platform.
+
+       data-bind="key"                     → text
+       data-bind="key" data-unit="g"       → text + unit
+       data-bind-map="key" data-slot="A1"  → data-state attribute
+-->
+<div class="wrap">
+
+  <h1 data-bind="state">—</h1>
+
+  <div class="rack">
+    <div class="slot" data-bind-map="tubes" data-slot="A1"><b>A1</b></div>
+    <div class="slot" data-bind-map="tubes" data-slot="A2"><b>A2</b></div>
+    <div class="slot" data-bind-map="tubes" data-slot="A3"><b>A3</b></div>
+    <div class="slot" data-bind-map="tubes" data-slot="A4"><b>A4</b></div>
+    <div class="slot" data-bind-map="tubes" data-slot="A5"><b>A5</b></div>
+
+    <div class="slot" data-bind-map="tubes" data-slot="B1"><b>B1</b></div>
+    <div class="slot" data-bind-map="tubes" data-slot="B2"><b>B2</b></div>
+    <div class="slot" data-bind-map="tubes" data-slot="B3"><b>B3</b></div>
+    <div class="slot" data-bind-map="tubes" data-slot="B4"><b>B4</b></div>
+    <div class="slot" data-bind-map="tubes" data-slot="B5"><b>B5</b></div>
+
+    <div class="slot" data-bind-map="tubes" data-slot="C1"><b>C1</b></div>
+    <div class="slot" data-bind-map="tubes" data-slot="C2"><b>C2</b></div>
+    <div class="slot" data-bind-map="tubes" data-slot="C3"><b>C3</b></div>
+    <div class="slot" data-bind-map="tubes" data-slot="C4"><b>C4</b></div>
+    <div class="slot" data-bind-map="tubes" data-slot="C5"><b>C5</b></div>
+
+    <div class="slot" data-bind-map="tubes" data-slot="D1"><b>D1</b></div>
+    <div class="slot" data-bind-map="tubes" data-slot="D2"><b>D2</b></div>
+    <div class="slot" data-bind-map="tubes" data-slot="D3"><b>D3</b></div>
+    <div class="slot" data-bind-map="tubes" data-slot="D4"><b>D4</b></div>
+    <div class="slot source" data-slot="D5"><b>D5</b><small>SOURCE</small></div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><span class="v" data-bind="tube">—</span><span class="l">Tube</span></div>
+    <div class="stat"><span class="v" data-bind="weight" data-unit="g">—</span><span class="l">Last weight</span></div>
+    <div class="stat"><span class="v" data-bind="dose" data-unit="mL">—</span><span class="l">Dose</span></div>
+  </div>
+
+</div>

@@ -14,4 +14,4 @@ plan_window:  4
 scheduler:    cpsat
 
 kwargs:       hmi/kwargs.j2
-hmi:          hmi/hmi.j2
+hmi:          hmi/pendant.html

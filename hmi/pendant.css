@@ -1,0 +1,89 @@
+/* bd — pendant screen styling.
+   Scoped to this screen by the shadow root: nothing here can reach the
+   rail, the navbar or any other project. Colours and spacing come from
+   the platform's design tokens, which inherit THROUGH the shadow
+   boundary — so this screen follows the light/dark toggle for free.
+   Hardcode a hex here and it will look wrong in one of the themes. */
+
+.wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-5);
+  font-family: var(--font);
+  color: var(--text);
+}
+
+h1 {
+  margin: 0;
+  font-size: 34px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  text-align: center;
+}
+
+/* ── the rack ───────────────────────────────────────────────────── */
+.rack {
+  display: grid;
+  grid-template-columns: repeat(5, 52px);
+  gap: var(--space-3);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+}
+
+.slot {
+  width: 52px; height: 52px; border-radius: 50%;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  font-family: var(--mono); font-size: 11px; font-weight: 800;
+  border: 2px dashed var(--border);
+  color: var(--muted);
+  transition: background var(--motion-med) var(--ease),
+              border-color var(--motion-med) var(--ease);
+}
+.slot small { font-size: 7px; letter-spacing: 0.08em; }
+
+/* State comes from the platform as a data-state attribute; what each
+   state LOOKS like is this project's business. */
+.slot[data-state="queued"]  { border-style: solid; background: var(--surface2); }
+.slot[data-state="working"] {
+  border: 2px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: var(--text);
+}
+.slot[data-state="active"] {
+  border: 2px solid var(--accent); background: var(--accent); color: #fff;
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--accent) 22%, transparent);
+  animation: breathe 1.6s ease-in-out infinite;
+}
+.slot[data-state="done"] {
+  border: 2px solid var(--green); background: var(--green); color: #fff;
+}
+.slot[data-state="attention"] {
+  border: 2px solid var(--amber); background: var(--amber); color: #fff;
+}
+.source { border-style: solid; background: var(--surface2); }
+
+@keyframes breathe {
+  50% { box-shadow: 0 0 0 10px color-mix(in srgb, var(--accent) 10%, transparent); }
+}
+
+/* ── stats ──────────────────────────────────────────────────────── */
+.stats { display: flex; gap: var(--space-4); flex-wrap: wrap; justify-content: center; }
+.stat {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4) var(--space-5);
+  box-shadow: var(--shadow-sm);
+  display: flex; flex-direction: column; min-width: 132px;
+}
+.stat .v {
+  font-size: 26px; font-weight: 800;
+  font-variant-numeric: tabular-nums; letter-spacing: -0.5px;
+}
+.stat .l {
+  color: var(--muted); font-weight: 700; font-size: 11px;
+  text-transform: uppercase; letter-spacing: 0.06em; margin-top: 2px;
+}
