@@ -1,4 +1,4 @@
-// bd — the run-setup screen (declared in launch.yaml as `params:`).
+// bd — the run-setup screen (declared in launch.yaml as `setup:`).
 //
 // The platform hosts this in a shadow root inside the Parameters modal,
 // keeps the modal chrome and the Start / Launch buttons, and validates

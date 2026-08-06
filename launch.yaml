@@ -13,6 +13,6 @@ checks:       checks.py
 plan_window:  4
 scheduler:    cpsat
 
-kwargs:       hmi/kwargs.j2        # the schema — what a run takes
-params:       hmi/params.js       # run setup — how the operator sets it
-hmi:          hmi/pendant.html    # the pendant screen during the run
+kwargs:       hmi/kwargs.j2       # WHAT a run takes  (data — Python reads it)
+setup:        hmi/setup.js        # screen BEFORE the run
+pendant:      hmi/pendant.html    # screen DURING the run
