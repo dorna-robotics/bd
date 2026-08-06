@@ -1,42 +1,17 @@
-# bd — run parameters (rendered as Jinja2, then parsed as YAML).
+# bd — the kwargs themselves. Each entry IS its default; nothing here
+# says how anything looks (labels, units, limits live in hmi/setup.js,
+# the screen that sets these).
 #
-# This file is the SCHEMA: what a run takes, with types and defaults.
-# It is read headlessly too — `python3 -m workspace.bt.replay . --batch 4`
-# slices `tubes` straight out of the default below — so it stays a
-# declaration and never says how anything LOOKS.
-#
-# How an operator SETS these is hmi/setup.js, declared in launch.yaml
-# as `setup:`. That file owns the rack drawing; the platform knows only
-# that `tubes` is a map of numbers.
+# Read headlessly too: `replay --batch N` slices the first N tubes
+# straight out of this map, so it lists every processable position in
+# run order. D5 is the reservoir — dispensed FROM, never processed —
+# so it is not in the map.
 
-{% set rows = ['A', 'B', 'C', 'D'] %}
-{% set cols = [1, 2, 3, 4, 5] %}
-{% set source = 'D5' %}          {# reservoir — dispensed FROM, never processed #}
 {% set dose = 0.4 %}
 
 tubes:
-  label: Tubes to process
-  hint: Tap the rack positions you loaded. Each selected tube runs the full chain.
-  # Per-position value: each tube carries its own dose, so the kwarg is
-  # {slot: mL}. The limits are the schema's — the platform enforces them
-  # on whatever the screen returns.
-  value:
-    label: Dispense
-    unit: mL
-    default: {{ dose }}
-    min: 0.1
-    max: 5.0
-    step: 0.1
-  # Every processable position of rack_falcon_15ml_1. The grid lives
-  # HERE, in the project, because the project is what knows its rack —
-  # the operator screen prunes this to what is actually loaded.
-  default:
-{% for r in rows %}{% for c in cols %}{% if r ~ c != source %}
-    "{{ r }}{{ c }}": {{ dose }}
+{% for r in ['A', 'B', 'C', 'D'] %}{% for c in [1, 2, 3, 4, 5] %}{% if r ~ c != 'D5' %}
+  "{{ r }}{{ c }}": {{ dose }}
 {%- endif %}{% endfor %}{% endfor %}
 
-print_label:
-  type: bool
-  default: false
-  label: Print label
-  hint: Print and apply a barcode label on each tube (on the printer, right after the pick) before it is decapped. Off skips the printer entirely.
+print_label: false
