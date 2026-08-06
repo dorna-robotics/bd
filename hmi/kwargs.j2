@@ -1,17 +1,36 @@
-# bd — the kwargs themselves. Each entry IS its default; nothing here
-# says how anything looks (labels, units, limits live in hmi/setup.js,
-# the screen that sets these).
+# bd — run parameters (rendered as Jinja2, then parsed as YAML).
 #
-# Read headlessly too: `replay --batch N` slices the first N tubes
-# straight out of this map, so it lists every processable position in
-# run order. D5 is the reservoir — dispensed FROM, never processed —
-# so it is not in the map.
+# Spec form: each entry declares its default plus type/label/limits.
+# Read headlessly (`replay --batch N` slices the first N tubes out of
+# the default map) AND by the setup screen (hmi/setup.js pulls label,
+# hint and the dose spec from here — one source of truth).
 
 {% set dose = 0.4 %}
 
 tubes:
+  # A collection carries no `type:` — the default's shape declares it
+  # (platform rule, project-guide §3).
+  label: Tubes to process
+  hint: Tap the rack positions you loaded. Each selected tube runs the full chain.
+  # Per-position value: each selected tube carries its own dose, so the
+  # kwarg arrives as {slot: mL}. The setup screen's dose input takes
+  # its unit and limits from here.
+  value:
+    label: Dispense
+    unit: mL
+    default: {{ dose }}
+    min: 0.1
+    max: 5.0
+    step: 0.1
+  # Every processable position of the rack, in run order. D5 is the
+  # reservoir — dispensed FROM, never processed — so it is absent.
+  default:
 {% for r in ['A', 'B', 'C', 'D'] %}{% for c in [1, 2, 3, 4, 5] %}{% if r ~ c != 'D5' %}
-  "{{ r }}{{ c }}": {{ dose }}
+    "{{ r }}{{ c }}": {{ dose }}
 {%- endif %}{% endfor %}{% endfor %}
 
-print_label: false
+print_label:
+  type: bool
+  default: false
+  label: Print label
+  hint: Print and apply a barcode label on each tube (on the printer, right after the pick) before it is decapped. Off skips the printer entirely.

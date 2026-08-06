@@ -11,11 +11,8 @@
 const SOURCE = "D5";                       // reservoir — dispensed FROM
 const COLS = 5;
 
-// Presentation lives HERE, not in the schema — kwargs.j2 is bare
-// defaults only ("the kwargs themselves").
-const LABEL = "Tubes to process";
-const HINT = "Tap the rack positions you loaded. Each selected tube runs the full chain.";
-const DOSE = { label: "Dispense", unit: "mL", default: 0.4, min: 0.1, max: 5.0, step: 0.1 };
+// Label, hint and the dose spec come from the SCHEMA (kwargs.j2) —
+// one source of truth; this file only draws it.
 
 export default {
   css: `
@@ -92,9 +89,9 @@ export default {
 
   mount(root, api) {
     const spec = api.schema.tubes || {};
-    const vspec = DOSE;
-    const step = vspec.step;
-    const fallback = vspec.default;
+    const vspec = spec.value || {};
+    const step = vspec.step ?? 0.1;
+    const fallback = vspec.default ?? 0;
     // The GRID is the schema default's keys — one source of truth, in
     // the project's own kwargs.j2. Current values win when a previous
     // run saved some.
@@ -113,19 +110,19 @@ export default {
     wrap.className = "wrap";
     wrap.innerHTML = `
       <div class="head">
-        <h2>${LABEL}</h2><span class="n"></span>
+        <h2>${spec.label || "Tubes"}</h2><span class="n"></span>
       </div>
-      <p class="hint">${HINT}</p>
+      <p class="hint">${spec.hint || ""}</p>
       <div class="quick">
         <button type="button" data-q="all">Select all</button>
         <button type="button" data-q="clear">Clear</button>
       </div>
       <div class="rack"></div>
       <div class="dose">
-        <label>${vspec.label}</label>
+        <label>${vspec.label || "Value"}</label>
         <input type="number" step="${step}"
-               min="${vspec.min}" max="${vspec.max}" value="${fallback}">
-        <span class="unit">${vspec.unit}</span>
+               min="${vspec.min ?? 0}" max="${vspec.max ?? 999}" value="${fallback}">
+        <span class="unit">${vspec.unit || ""}</span>
         <button type="button" class="apply">Apply to selected</button>
       </div>`;
 
