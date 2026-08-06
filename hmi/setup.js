@@ -2,7 +2,7 @@
 //
 // The platform hosts this in a shadow root inside the Parameters modal,
 // keeps the modal chrome and the Start / Launch buttons, and validates
-// whatever value() returns against hmi/kwargs.j2. Everything between is
+// whatever value() returns against hmi/default.j2. Everything between is
 // this project's business: the rack, its geometry, the doses.
 //
 // JS rather than HTML because the grid is generated and interactive —
