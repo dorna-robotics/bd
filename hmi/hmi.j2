@@ -1,13 +1,21 @@
 # bd — pendant HMI. The project DECLARES widgets; the platform renders
 # them. Widgets bind to values published with rt.op() in actions.py.
 #
-# Catalog (platform-owned): state · stat · progress
+# Catalog (platform-owned): state · stat · progress · rack
 
 hmi:
   - widget: state
     bind: state
 
   - widget: progress
+
+  # The rack itself — grid derived from the scene component, per-slot
+  # state published by actions.py as {slot: done|active|attention|
+  # queued|empty}.
+  - widget: rack
+    component: rack_falcon_15ml_1
+    bind: tubes
+    label: Falcon rack
 
   - widget: stat
     bind: tube

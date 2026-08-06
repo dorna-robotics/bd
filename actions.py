@@ -157,6 +157,29 @@ VOL_BY_TUBE: dict = {}
 
 def _vol(tube):
     return VOL_BY_TUBE.get(tube, VOL_UL)
+
+
+# Per-slot display state for the pendant's rack widget. The PROJECT owns
+# the meaning (it knows its facts); the platform owns the grammar —
+# done / active / attention / queued / empty. Published as one rt.op
+# key, so the rack redraws from the same channel as every other value.
+SLOT_STATE: dict = {}
+
+
+def _slot_of(tube):
+    slots = [f"{r}{c}" for r in "ABCD" for c in range(1, 6)]
+    return slots[tube] if 0 <= tube < len(slots) else None
+
+
+def _mark(rt, tube, state):
+    """Set one position's display state and republish the rack."""
+    slot = _slot_of(tube)
+    if slot is None:
+        return
+    if SLOT_STATE.get(slot) == state:
+        return
+    SLOT_STATE[slot] = state
+    rt.op(tubes=dict(SLOT_STATE))
 # Reservoir: the rack slot holding the OPEN (uncapped) source tube every
 # dose is drawn from. The rack's slot list is row-major (A1..A5, B1..B5,
 # C1..C5, D1..D5), so D5 is the last of the 20 — reserving it leaves
@@ -250,6 +273,15 @@ def setup(**kwargs):
     names = list(doses) if doses else list(picked)
     tubes = sorted({slots.index(s) for s in names
                     if s in slots and s != SOURCE_SLOT})[:MAX_TUBES]
+    # Seed the rack display: every selected position starts queued, the
+    # reservoir is shown occupied (it holds the source tube all run).
+    SLOT_STATE.clear()
+    for t in tubes:
+        s_ = _slot_of(t)
+        if s_:
+            SLOT_STATE[s_] = "queued"
+    SLOT_STATE[SOURCE_SLOT] = "queued"
+
     # index → microliters, the unit the pipettor recipe takes.
     VOL_BY_TUBE.clear()
     for t in tubes:
@@ -352,6 +384,7 @@ class Pick(Action):
         slot = _slot(self, tube)
         rt.step(f"tube {tube + 1} [{slot}]: pick")
         rt.op(state=f"Picking tube {tube + 1}", tube=f"{tube + 1} [{slot}]")
+        _mark(rt, tube, "active")
         rt.step(_progress_pct(self), level="progress")
         rcp["falcon_rack"].pick(slot, soft_approach=True, motion_plan_kwargs=MOTION_PLAN_GRAVITY)
         return "picked"
@@ -456,6 +489,7 @@ class Weigh(Action):
         grams = rcp["scale"].weight(sim_return=12.345)
         if grams is None:
             rt.step(f"tube {tube + 1}: scale unavailable — reconnect it, then Resume")
+            _mark(rt, tube, "attention")
             return False
         rt.step(f"tube {tube + 1}: weight {grams} g")
         rt.op(weight=grams)
@@ -550,6 +584,7 @@ class Scan(Action):
             rcp["barcode_reader"].rotate(rotation=90)
         scan = rcp["barcode_reader"].detect()
         if scan is None:
+            _mark(rt, tube, "attention")
             rt.step(f"tube {tube + 1}: barcode reader unavailable — reconnect it, then Resume")
             return False
         rt.step(f"tube {tube + 1}: scan {scan}")
@@ -897,8 +932,10 @@ class ReturnCapped(Action):
         rt, rcp = self.ctx.runtime, self.ctx.recipes
         slot = _slot(self, tube)
         rt.step(f"tube {tube + 1}: capped, back to rack [{slot}]")
+        rt.op(state=f"Returning tube {tube + 1}")
         rt.step(_progress_pct(self), level="progress")
         rcp["falcon_rack"].place(slot, gravity_offset=GRAV_OFFSET, soft_approach=True, motion_plan_kwargs=MOTION_PLAN_GRAVITY)
+        _mark(rt, tube, "done")      # this tube is finished
         return "recapped"
 
 
