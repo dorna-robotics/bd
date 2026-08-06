@@ -8,6 +8,22 @@
 # would place fields side by side — not used here: the rack reads better
 # with the run options directly under it.
 
+# DEMO ONLY — a second rack so the tab layout can be seen. bd has one
+# falcon rack; this field points at the same component and is ignored
+# by setup(). Delete both this field and the _layout block to go back.
+_layout:
+  - tabs: [tubes, tubes_demo]
+
+tubes_demo:
+  type: slots
+  component: rack_falcon_15ml_1
+  exclude: ["D5"]
+  exclude_label: "SOURCE"
+  quick: [all, clear]
+  default: []
+  label: "IN — tray 2 (demo)"
+  hint: Fake second rack, here only to show the tab layout.
+
 tubes:
   type: slots
   component: rack_falcon_15ml_1
@@ -25,7 +41,7 @@ tubes:
     max: 5.0
     step: 0.1
   default: ["A1"]
-  label: Tubes to process
+  label: "IN — tray 1"
   hint: Tap the rack positions you loaded. Each selected tube runs the full chain.
 
 print_label:
