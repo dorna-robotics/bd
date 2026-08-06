@@ -14,7 +14,8 @@ hmi:
   # queued|empty}.
   - widget: rack
     component: rack_falcon_15ml_1
-    bind: tubes
+    bind: tubes            # {slot: state}
+    detail: tube_info      # {slot: {label: value}} — shown when tapped
     label: Falcon rack
 
   - widget: stat

@@ -164,6 +164,20 @@ def _vol(tube):
 # done / active / attention / queued / empty. Published as one rt.op
 # key, so the rack redraws from the same channel as every other value.
 SLOT_STATE: dict = {}
+# What the pendant shows when an operator taps a position. One small
+# record per slot — the same rt.op channel, so no extra plumbing.
+SLOT_INFO: dict = {}
+
+
+def _record(rt, tube, **fields):
+    """Attach facts to a position (weight, barcode, dose, ...)."""
+    slot = _slot_of(tube)
+    if slot is None:
+        return
+    SLOT_INFO.setdefault(slot, {}).update(
+        {k: v for k, v in fields.items() if v is not None}
+    )
+    rt.op(tube_info=dict(SLOT_INFO))
 
 
 def _slot_of(tube):
@@ -276,6 +290,7 @@ def setup(**kwargs):
     # Seed the rack display: every selected position starts queued, the
     # reservoir is shown occupied (it holds the source tube all run).
     SLOT_STATE.clear()
+    SLOT_INFO.clear()
     for t in tubes:
         s_ = _slot_of(t)
         if s_:
@@ -493,6 +508,7 @@ class Weigh(Action):
             return False
         rt.step(f"tube {tube + 1}: weight {grams} g")
         rt.op(weight=grams)
+        _record(rt, tube, Weight=f"{grams} g")
         return "weighed"
 
 
@@ -588,6 +604,7 @@ class Scan(Action):
             rt.step(f"tube {tube + 1}: barcode reader unavailable — reconnect it, then Resume")
             return False
         rt.step(f"tube {tube + 1}: scan {scan}")
+        _record(rt, tube, Barcode=scan)
         return "scanned"
 
 
@@ -740,6 +757,7 @@ class Aspirate(Action):
         rt, rcp = self.ctx.runtime, self.ctx.recipes
         rt.step(f"tube {tube + 1}: aspirate {_vol(tube)} µL from [{SOURCE_SLOT}]")
         rt.op(state=f"Drawing dose for tube {tube + 1}", dose=round(_vol(tube) / 1000, 3))
+        _record(rt, tube, Dose=f"{round(_vol(tube) / 1000, 3)} mL")
         rt.step(_progress_pct(self), level="progress")
         rcp["falcon_pipette"].immerse(anchor=SOURCE_SLOT, depth=IMMERSE_DEPTH,
                                         soft_approach=IMMERSE_SOFT_APPROACH,
