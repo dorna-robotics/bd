@@ -616,13 +616,17 @@ class Scan(Action):
         # 90-degree steps so every face passes the reader.
         for _ in range(4):
             rcp["barcode_reader"].rotate(rotation=90)
-        scan = rcp["barcode_reader"].detect()
-        if scan is None:
+        # code() returns the decoded STRING, or None on timeout/nak/
+        # disconnect — one check covers every failure mode. (detect()
+        # returns a Scan object: truthy even on timeout, and an object
+        # must never go into _record — rt.op values are plain data.)
+        code = rcp["barcode_reader"].code()
+        if code is None:
             _mark(rt, tube, "attention")
-            rt.step(f"tube {tube + 1}: barcode reader unavailable — reconnect it, then Resume")
+            rt.step(f"tube {tube + 1}: no barcode — check the label / reader, then Resume")
             return False
-        rt.step(f"tube {tube + 1}: scan {scan}")
-        _record(rt, tube, Barcode=scan)
+        rt.step(f"tube {tube + 1}: scan {code!r}")
+        _record(rt, tube, Barcode=code)
         return "scanned"
 
 
