@@ -149,7 +149,14 @@ IMMERSE_SOFT_APPROACH = True
 # (PipettingSite.immerse's signature hardcodes 50, which also means a
 # padding: in recipes.j2 is shadowed and would do nothing).
 IMMERSE_PADDING = 80   # mm above contact where the descent starts
-VOL_UL        = 400    # microliters aspirated from D5 → dispensed per tube
+VOL_UL        = 400    # default dose (µL) when the operator sets none
+# Per-tube dose in µL, filled by setup() from the ``tubes`` kwarg's
+# {slot: mL} map. Aspirate/Dispense read it so a run can mix volumes.
+VOL_BY_TUBE: dict = {}
+
+
+def _vol(tube):
+    return VOL_BY_TUBE.get(tube, VOL_UL)
 # Reservoir: the rack slot holding the OPEN (uncapped) source tube every
 # dose is drawn from. The rack's slot list is row-major (A1..A5, B1..B5,
 # C1..C5, D1..D5), so D5 is the last of the 20 — reserving it leaves
@@ -237,8 +244,17 @@ def setup(**kwargs):
     picked = kwargs.get("tubes") or []
     if isinstance(picked, str):                 # tolerate "A1,A2" text
         picked = [s.strip() for s in picked.split(",") if s.strip()]
-    tubes = sorted({slots.index(s) for s in picked
+    # {slot: mL} when the operator set per-tube doses, else a plain list
+    # of slot names (every tube then gets the default volume).
+    doses = dict(picked) if isinstance(picked, dict) else {}
+    names = list(doses) if doses else list(picked)
+    tubes = sorted({slots.index(s) for s in names
                     if s in slots and s != SOURCE_SLOT})[:MAX_TUBES]
+    # index → microliters, the unit the pipettor recipe takes.
+    VOL_BY_TUBE.clear()
+    for t in tubes:
+        ml = doses.get(slots[t])
+        VOL_BY_TUBE[t] = int(round(float(ml) * 1000)) if ml is not None else VOL_UL
 
     # Label printing is a launch-time choice, so it is expressed in the
     # INITIAL STATE rather than in preconditions: Decap always requires
@@ -678,14 +694,14 @@ class Aspirate(Action):
 
     def execute(self, tube):
         rt, rcp = self.ctx.runtime, self.ctx.recipes
-        rt.step(f"tube {tube + 1}: aspirate {VOL_UL} µL from [{SOURCE_SLOT}]")
+        rt.step(f"tube {tube + 1}: aspirate {_vol(tube)} µL from [{SOURCE_SLOT}]")
         rt.step(_progress_pct(self), level="progress")
         rcp["falcon_pipette"].immerse(anchor=SOURCE_SLOT, depth=IMMERSE_DEPTH,
                                         soft_approach=IMMERSE_SOFT_APPROACH,
                                         padding=IMMERSE_PADDING)
         # TEMPORARY (blind mode): pump outcome deliberately ignored while
         # the comms are being sorted out — aspirate, retract, assume success.
-        rcp["falcon_pipette"].aspirate(vol=VOL_UL)
+        rcp["falcon_pipette"].aspirate(vol=_vol(tube))
         rcp["falcon_pipette"].retract(anchor=SOURCE_SLOT)
         return "aspirated"
 
@@ -710,14 +726,14 @@ class Dispense(Action):
     def execute(self, tube):
         rt, rcp = self.ctx.runtime, self.ctx.recipes
         slot = _slot(self, tube)
-        rt.step(f"tube {tube + 1} [{slot}]: dispense {VOL_UL} µL")
+        rt.step(f"tube {tube + 1} [{slot}]: dispense {_vol(tube)} µL")
         rt.step(_progress_pct(self), level="progress")
         rcp["falcon_pipette"].immerse(anchor=slot, depth=IMMERSE_DEPTH,
                                         soft_approach=IMMERSE_SOFT_APPROACH,
                                         padding=IMMERSE_PADDING)
         # TEMPORARY (blind mode): pump outcome deliberately ignored while
         # the comms are being sorted out — dispense, retract, assume success.
-        rcp["falcon_pipette"].dispense(vol=VOL_UL)
+        rcp["falcon_pipette"].dispense(vol=_vol(tube))
         rcp["falcon_pipette"].retract(anchor=slot)
         return "dispensed"
 
