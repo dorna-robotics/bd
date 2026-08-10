@@ -24,8 +24,8 @@ export default {
     .head { display: flex; align-items: baseline; gap: var(--space-3);
             margin-bottom: var(--space-2); }
     .head h2 { margin: 0; font-size: var(--text-md); font-weight: 700; }
-    .head .n { color: var(--muted); font-family: var(--mono);
-               font-size: 12px; font-variant-numeric: tabular-nums; }
+    .head .n { color: var(--muted); font-size: var(--text-sm);
+               font-variant-numeric: tabular-nums; }
     .hint { color: var(--muted); font-size: var(--text-sm);
             margin: 0 0 var(--space-4); }
 
@@ -39,56 +39,38 @@ export default {
     .quick button:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
     .quick button:disabled { opacity: 0.5; cursor: default; }
 
-    /* The rack draws as the physical object: circular wells on a plain
-       card, row letters + column numbers as axes, the dose under each
-       well, and the load edge marked. Empty wells are recessed (dashed
-       ring + inner shadow); selected wells fill with the accent tint;
-       the reservoir carries the amber ramp. */
+    /* The rack keeps a plain surface — it is the real footprint of the
+       thing on the bench, so it reads as an object, not as chrome. */
     .rack {
+      display: grid; grid-template-columns: repeat(${COLS}, 1fr);
+      gap: var(--space-3);
       background: var(--surface); border: 1px solid var(--border);
-      border-radius: var(--radius-lg); padding: 14px 14px 6px;
-      display: flex; flex-direction: column; gap: 8px;
+      border-radius: var(--radius-lg); padding: var(--space-4);
     }
-    .rrow { display: grid; grid-template-columns: 24px repeat(${COLS}, 1fr); gap: 8px; }
-    .colh { text-align: center; font-family: var(--mono); font-size: 11px; color: var(--muted); }
-    .rowh { height: 50px; display: flex; align-items: center; justify-content: center;
-            font-family: var(--mono); font-size: 11px; color: var(--muted); }
 
     .cell {
-      display: flex; flex-direction: column; align-items: center; gap: 4px;
-      padding: 3px 2px 5px; border: none; background: transparent;
-      border-radius: 7px; font: inherit; cursor: pointer;
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; gap: 2px;
+      min-height: 56px; border-radius: var(--radius-md);
+      border: 1px solid var(--border); background: var(--surface2);
+      font: inherit; color: var(--muted); cursor: pointer;
+      transition: border-color var(--motion-fast) var(--ease),
+                  background var(--motion-fast) var(--ease);
     }
-    .cell .well {
-      width: 44px; height: 44px; border-radius: 999px;
-      display: grid; place-items: center;
-      font-weight: 700; font-size: 12px;
-      background: var(--bg); border: 1px dashed var(--border);
-      color: var(--muted);
-      box-shadow: inset 0 2px 5px rgb(0 0 0 / 0.08);
-      transition: background var(--motion-fast) var(--ease),
-                  border-color var(--motion-fast) var(--ease),
-                  box-shadow var(--motion-fast) var(--ease);
-    }
-    .cell:hover:not(:disabled) .well { border-color: var(--accent); }
-    .cell .v { font-family: var(--mono); font-size: 10.5px; min-height: 14px;
-               color: var(--muted); font-variant-numeric: tabular-nums; }
+    .cell:hover:not(:disabled) { border-color: var(--accent); }
+    .cell .n { font-family: var(--mono); font-size: 11px; font-weight: 700; }
+    .cell .v { font-size: 11px; font-variant-numeric: tabular-nums; }
 
-    .cell[aria-pressed="true"] .well {
-      background: var(--accent-dim); border: 1.5px solid var(--accent);
-      color: var(--text); box-shadow: inset 0 0 0 2px var(--surface);
+    .cell[aria-pressed="true"] {
+      border-color: var(--accent); color: var(--text);
+      background: color-mix(in srgb, var(--accent) 10%, transparent);
+      box-shadow: var(--shadow-sm);
     }
-    .cell.source { cursor: default; }
-    .cell.source .well {
-      background: var(--amber-dim); border: 1.5px solid var(--amber);
-      color: var(--amber); box-shadow: inset 0 0 0 2px var(--surface);
+    .cell.source {
+      cursor: default; background: transparent;
+      border-style: dashed; color: var(--muted);
     }
-    .cell.source .v { color: var(--amber); }
-    .cell:disabled:not(.source) { cursor: default; opacity: 0.6; }
-
-    .edge { display: flex; align-items: center; gap: 10px; padding: 8px 4px 2px; }
-    .edge::before, .edge::after { content: ""; flex: 1; height: 1px; background: var(--border); }
-    .edge span { font-size: 10px; font-weight: 700; letter-spacing: 0.14em; color: var(--muted); }
+    .cell:disabled { cursor: default; opacity: 0.6; }
 
     .dose { display: flex; align-items: center; gap: var(--space-3);
             margin-top: var(--space-4); flex-wrap: wrap; }
@@ -138,10 +120,7 @@ export default {
         <button type="button" data-q="all">Select all</button>
         <button type="button" data-q="clear">Clear</button>
       </div>
-      <div class="rack">
-        <div class="rrow head"></div>
-        <div class="edge"><span>FRONT · LOAD FROM THIS EDGE</span></div>
-      </div>
+      <div class="rack"></div>
       <div class="dose">
         <label>${vspec.label}</label>
         <input type="number" step="${step}"
@@ -160,33 +139,11 @@ export default {
     const bySlot = new Set(all);
     if (!bySlot.has(SOURCE)) all.splice(indexOf(SOURCE, all), 0, SOURCE);
 
-    // Column-number header row (blank corner over the row letters).
-    const head = rack.querySelector(".rrow.head");
-    head.appendChild(document.createElement("span"));
-    for (let c = 1; c <= COLS; c++) {
-      const h = document.createElement("span");
-      h.className = "colh";
-      h.textContent = String(c);
-      head.appendChild(h);
-    }
-
-    const edge = rack.querySelector(".edge");
-    let row = null, rowLetter = null;
     for (const name of all) {
-      if (name[0] !== rowLetter) {
-        rowLetter = name[0];
-        row = document.createElement("div");
-        row.className = "rrow";
-        const rh = document.createElement("span");
-        rh.className = "rowh";
-        rh.textContent = rowLetter;
-        row.appendChild(rh);
-        rack.insertBefore(row, edge);
-      }
       const cell = document.createElement("button");
       cell.type = "button";
       cell.className = "cell" + (name === SOURCE ? " source" : "");
-      cell.innerHTML = `<span class="well">${name}</span><span class="v"></span>`;
+      cell.innerHTML = `<span class="n">${name}</span><span class="v"></span>`;
       if (name === SOURCE) {
         cell.disabled = true;
         cell.querySelector(".v").textContent = "SOURCE";
@@ -199,7 +156,7 @@ export default {
         });
         this.cells.set(name, cell);
       }
-      row.appendChild(cell);
+      rack.appendChild(cell);
     }
 
     wrap.querySelector('[data-q="all"]').addEventListener("click", () => {
@@ -234,7 +191,7 @@ export default {
     for (const [name, cell] of this.cells) {
       const on = this.picked.has(name);
       cell.setAttribute("aria-pressed", on ? "true" : "false");
-      cell.querySelector(".v").textContent = on ? this.picked.get(name).toFixed(1) + " mL" : "";
+      cell.querySelector(".v").textContent = on ? String(this.picked.get(name)) : "";
     }
     this.count.textContent = `${this.picked.size} selected`;
   },
