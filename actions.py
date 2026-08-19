@@ -216,8 +216,9 @@ SOURCE_SLOT   = "D5"
 MAX_TUBES     = 19
 
 # Motion parameters
+GRAV_OFFSET_CAPPED = 10
 GRAV_OFFSET   = 4      # mm — gravity press applied on every release
-SCALE_GRAV_OFFSET = GRAV_OFFSET + 5   # mm — extra press to seat the tube on the scaletop
+SCALE_GRAV_OFFSET = GRAV_OFFSET + 10   # mm — extra press to seat the tube on the scaletop
 # TCP over-drive on the two rigid-jaw picks. The decapper pick is a jaw
 # grip on a screwed-on cap, so Decapper.pick sets compliant=False and the
 # over-drive folds into the attach offset — the tube really does sit
@@ -415,7 +416,7 @@ class Pick(Action):
         rt.op(state=f"Picking tube {tube + 1}", tube=f"{tube + 1} [{slot}]")
         _mark(rt, tube, "active")
         rt.step(_progress_pct(self), level="progress")
-        rcp["falcon_rack"].pick(slot, soft_approach=True, motion_plan_kwargs=MOTION_PLAN_GRAVITY)
+        rcp["falcon_rack"].pick(slot, soft_approach=False, motion_plan_kwargs=MOTION_PLAN_GRAVITY)
         return "picked"
 
 
@@ -485,7 +486,7 @@ class PlaceOnScale(Action):
         rt.op(state=f"Weighing tube {tube + 1}")
         _mark(rt, tube, "active")
         rt.step(_progress_pct(self), level="progress")
-        rcp["scale_holder"].place("place", gravity_offset=SCALE_GRAV_OFFSET, soft_approach=True)
+        rcp["scale_holder"].place("place", gravity_offset=SCALE_GRAV_OFFSET, soft_approach=False)
         return "on_scale"
 
 
@@ -558,7 +559,7 @@ class PickFromScale(Action):
         rt, rcp = self.ctx.runtime, self.ctx.recipes
         rt.step(f"tube {tube + 1}: pick off scale")
         rt.step(_progress_pct(self), level="progress")
-        rcp["scale_holder"].pick("place", soft_approach=True)
+        rcp["scale_holder"].pick("place", soft_approach=False)
         return "off_scale"
 
 
@@ -674,7 +675,7 @@ class Decap(Action):
         rt.op(state=f"Opening tube {tube + 1}")
         _mark(rt, tube, "active")
         rt.step(_progress_pct(self), level="progress")
-        rcp["decapper"].place(exit=False)
+        rcp["decapper"].place(exit=False, soft_approach=False)
         rcp["decapper"].decap(approach=False)
         return "decapped"
 
@@ -697,7 +698,7 @@ class ParkCap(Action):
         cap_slot = _cap_slot(self, tube)
         rt.step(f"tube {tube + 1}: cap to holder [{cap_slot}]")
         rt.step(_progress_pct(self), level="progress")
-        rcp["capholder"].place(cap_slot, soft_approach=True, gravity_offset=GRAV_OFFSET, motion_plan_kwargs=MOTION_PLAN_GRAVITY)
+        rcp["capholder"].place(cap_slot, soft_approach=False, gravity_offset=GRAV_OFFSET, motion_plan_kwargs=MOTION_PLAN_GRAVITY)
         return "cap_parked"
 
 
@@ -718,7 +719,7 @@ class RetrieveTube(Action):
         rt, rcp = self.ctx.runtime, self.ctx.recipes
         rt.step(f"tube {tube + 1}: pick from decapper")
         rt.step(_progress_pct(self), level="progress")
-        rcp["decapper"].pick(tool_tcp_z_offset=DECAPPER_TCP_Z_OFFSET)
+        rcp["decapper"].pick(tool_tcp_z_offset=DECAPPER_TCP_Z_OFFSET, soft_approach=False)
         return "retrieved"
 
 
@@ -742,7 +743,7 @@ class Return(Action):
         rt.op(state=f"Returning tube {tube + 1}")
         _mark(rt, tube, "active")
         rt.step(_progress_pct(self), level="progress")
-        rcp["falcon_rack"].place(slot, gravity_offset=GRAV_OFFSET, soft_approach=True, motion_plan_kwargs=MOTION_PLAN_GRAVITY)
+        rcp["falcon_rack"].place(slot, gravity_offset=GRAV_OFFSET_CAPPED, soft_approach=False, motion_plan_kwargs=MOTION_PLAN_GRAVITY)
         return "returned"
 
 
@@ -888,7 +889,7 @@ class PickForCap(Action):
         slot = _slot(self, tube)
         rt.step(f"tube {tube + 1} [{slot}]: pick to re-cap")
         rt.step(_progress_pct(self), level="progress")
-        rcp["falcon_rack"].pick(slot, soft_approach=True, motion_plan_kwargs=MOTION_PLAN_GRAVITY)
+        rcp["falcon_rack"].pick(slot, soft_approach=False, motion_plan_kwargs=MOTION_PLAN_GRAVITY)
         return "recap_held"
 
 
@@ -910,7 +911,7 @@ class PlaceInDecapper(Action):
         rt, rcp = self.ctx.runtime, self.ctx.recipes
         rt.step(f"tube {tube + 1}: into the decapper")
         rt.step(_progress_pct(self), level="progress")
-        rcp["decapper"].place()
+        rcp["decapper"].place(soft_approach=False)
         return "in_decapper"
 
 
@@ -935,7 +936,7 @@ class PickCap(Action):
         cap_slot = _cap_slot(self, tube)
         rt.step(f"tube {tube + 1}: cap from holder [{cap_slot}]")
         rt.step(_progress_pct(self), level="progress")
-        rcp["capholder"].pick(cap_slot, soft_approach=True,
+        rcp["capholder"].pick(cap_slot, soft_approach=False,
                               tool_tcp_z_offset=CAPHOLDER_TCP_Z_OFFSET,
                               motion_plan_kwargs=MOTION_PLAN_GRAVITY)
         return "cap_held"
@@ -991,7 +992,7 @@ class ReturnCapped(Action):
         rt.step(f"tube {tube + 1}: capped, back to rack [{slot}]")
         rt.op(state=f"Returning tube {tube + 1}")
         rt.step(_progress_pct(self), level="progress")
-        rcp["falcon_rack"].place(slot, gravity_offset=GRAV_OFFSET, soft_approach=True, motion_plan_kwargs=MOTION_PLAN_GRAVITY)
+        rcp["falcon_rack"].place(slot, gravity_offset=GRAV_OFFSET_CAPPED, soft_approach=False, motion_plan_kwargs=MOTION_PLAN_GRAVITY)
         _mark(rt, tube, "done")      # this tube is finished
         return "recapped"
 
