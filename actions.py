@@ -498,15 +498,28 @@ class Weigh(Action):
     this action (examples/scale is the reference for this pattern)."""
     params   = ["tube"]
     duration = 3
-    # "scale", not "robot": during the read the tube sits on the pan and
-    # the hand is empty (PlaceOnScale restored hand_empty), so the arm is
-    # genuinely free — holding the robot lock serialized 3 s of pure
-    # device wait into the arm's schedule. No ``tool`` either: a pure
-    # read is transparent to tool sequencing (a declared tool would
-    # force a gripper mount just to wait on a balance). Mirrors
-    # examples/scale. Hardware caveat lives there too: an arm moving on
-    # the shared bench can slow the balance's settle.
-    resource = "scale"
+    # BOTH LOCKS, AND THE ARM HOLDS STILL. This was "scale" alone, on the
+    # argument that the hand is empty during the read so the arm is free.
+    # It is free in the scheduler's sense and not in the bench's: the
+    # SPX222 is an analytical balance and an arm moving on the shared
+    # frame disturbs the reading. Claiming "robot" too is how that is
+    # stated to the planner — the lock is the only language it has for
+    # "nothing else may move now".
+    #
+    # KEEP "scale" AS WELL. Replacing it with "robot" would drop the
+    # balance's own mutual exclusion; a multi-lock resource is the
+    # documented form for exactly this (bt-framework-guide.md §"resource"
+    # gives robot+scale as its example).
+    #
+    # ``tool`` IS DECLARED, and it is not cosmetic. Without it the weigh
+    # is tool-AGNOSTIC, and the scheduler's setup table charges a full
+    # swap on every agnostic->opinionated pair — four spurious 10 s
+    # gripper swaps per batch of 4. Measured: 725 s base, 774 s with the
+    # robot lock alone, 734 s once the tool is declared. The gripper is
+    # already mounted either way, so naming it costs nothing and the
+    # remaining +9 s is the real price of not overlapping the 3 s read.
+    resource = ("scale", "robot")
+    tool     = "gripper"
 
     def pre(self, tube):
         return on_scale(tube) & ~weighed(tube)
