@@ -103,6 +103,16 @@ def main():
     scene = [str(_BASE_DIR / p) for p in scene]
 
     ws = Workspace(config_path=scene, port=args.port)
+    # DECLARE the project folder; do not let the server guess it. It
+    # otherwise infers "the folder above scene/", which lands on the wrong
+    # project as soon as a project shares a sibling's scene
+    # (scene: [../scene/...]) — it would then serve the sibling's hmi/ and
+    # pendant, and save methods into the sibling's hmi/methods/.
+    #
+    # An attribute, not a constructor argument: a platform that does not
+    # read it yet just ignores it and keeps the old guess, so this file
+    # stays compatible with an unpatched workspace.
+    ws.project_dir = _BASE_DIR
     RuntimeServer(runtime=ws.rt, workflow_fn=workflow_fn, workspace=ws).run()
 
 
